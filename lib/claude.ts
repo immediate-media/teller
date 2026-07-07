@@ -1,6 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk'
 
-const MODEL = process.env.CLAUDE_MODEL ?? 'claude-opus-4-5'
+const MODEL = process.env.CLAUDE_MODEL ?? 'claude-sonnet-4-6'
 const MAX_TOKENS = 8192
 
 let _client: Anthropic | null = null
