@@ -1,0 +1,11 @@
+helper_profiles_table_schema(
+  helper,
+  helper_name,
+  team,
+  skills,
+  topics_owned,
+  willingness_status,
+  availability_status,
+ helper_type,  -- example:  person / document / person, document
+ updated_at
+)

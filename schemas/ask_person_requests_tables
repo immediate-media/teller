@@ -1,0 +1,13 @@
+ask_person_requests tables (
+  asker,
+  question_text,
+  assigned_helper,
+  request_status,
+  mcp_answer_text,
+  retrieved_context_json,
+  human_answer_text,
+  is_solved,
+  answer_types,   --example: auto / person / document
+  created_at,
+  updated_at
+)

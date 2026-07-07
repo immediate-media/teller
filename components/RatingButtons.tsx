@@ -28,7 +28,7 @@ export function RatingButtons({ resultId, initialRating = null }: Props) {
   }
 
   return (
-    <div className="flex items-center gap-1" title="Rate this result">
+    <div className="flex items-center gap-2">
       <button
         onClick={() => rate('good')}
         disabled={saving}
@@ -53,6 +53,16 @@ export function RatingButtons({ resultId, initialRating = null }: Props) {
       >
         👎
       </button>
+      {rating === 'good' && (
+        <a
+          href={`/api/results/${resultId}/export`}
+          download
+          className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors ml-1"
+          title="Download schema export"
+        >
+          ↓ Export JSON
+        </a>
+      )}
     </div>
   )
 }
