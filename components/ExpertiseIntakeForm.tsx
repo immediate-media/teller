@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import type { ExpertiseResponse } from '@/types'
+import { ProgressSteps, type Step } from '@/components/ProgressSteps'
 
 type Props = {
   onResult: (data: Extract<ExpertiseResponse, { ok: true }>) => void
@@ -10,11 +11,20 @@ type Props = {
 export function ExpertiseIntakeForm({ onResult }: Props) {
   const [question, setQuestion] = useState('')
   const [loading, setLoading] = useState(false)
+  const [steps, setSteps] = useState<Step[]>([])
   const [error, setError] = useState<string | null>(null)
+
+  function addStep(message: string) {
+    setSteps((prev) => [
+      ...prev.map((s) => ({ ...s, active: false })),
+      { message, active: true },
+    ])
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
+    setSteps([])
     setLoading(true)
 
     try {
@@ -24,17 +34,43 @@ export function ExpertiseIntakeForm({ onResult }: Props) {
         body: JSON.stringify({ question }),
       })
 
-      const data: ExpertiseResponse = await res.json()
-
-      if (!data.ok) {
-        setError(data.error)
+      if (!res.ok) {
+        const data = await res.json()
+        setError(data.error ?? 'Something went wrong.')
         return
       }
 
-      onResult(data)
+      const reader = res.body!.getReader()
+      const decoder = new TextDecoder()
+      let buffer = ''
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        buffer += decoder.decode(value, { stream: true })
+
+        const chunks = buffer.split('\n\n')
+        buffer = chunks.pop() ?? ''
+
+        for (const chunk of chunks) {
+          const line = chunk.trim()
+          if (!line.startsWith('data: ')) continue
+          const data = JSON.parse(line.slice(6))
+
+          if (data.event === 'progress') {
+            addStep(data.message)
+          } else if (data.event === 'result') {
+            setSteps((prev) => prev.map((s) => ({ ...s, active: false })))
+            onResult({ ok: true, id: data.id, result: data.result, evidence: data.evidence })
+            return
+          } else if (data.event === 'error') {
+            setError(data.message)
+            return
+          }
+        }
+      }
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Something went wrong.'
-      setError(message)
+      setError(err instanceof Error ? err.message : 'Something went wrong.')
     } finally {
       setLoading(false)
     }
@@ -76,14 +112,10 @@ export function ExpertiseIntakeForm({ onResult }: Props) {
           disabled={loading || !question.trim()}
           className="w-full rounded-md bg-indigo-600 hover:bg-indigo-500 disabled:bg-zinc-700 disabled:text-zinc-500 disabled:cursor-not-allowed px-4 py-2.5 text-sm font-medium text-white transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-zinc-900"
         >
-          {loading ? 'Searching…' : 'Find who to talk to'}
+          {loading ? 'Working…' : 'Find who to talk to'}
         </button>
 
-        {loading && (
-          <p className="text-center text-xs text-zinc-500">
-            Searching commit history, Jira, and Confluence — usually 20–40 seconds.
-          </p>
-        )}
+        <ProgressSteps steps={steps} />
       </form>
     </div>
   )

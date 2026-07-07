@@ -8,6 +8,25 @@ import type { ExpertiseRequest, ExpertiseOutput } from '@/types'
 
 export const maxDuration = 300
 
+const encoder = new TextEncoder()
+
+function sseStream(work: (send: (data: object) => void) => Promise<void>): ReadableStream {
+  return new ReadableStream({
+    async start(controller) {
+      function send(data: object) {
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`))
+      }
+      try {
+        await work(send)
+      } catch (err) {
+        send({ event: 'error', message: err instanceof Error ? err.message : 'Unknown error' })
+      } finally {
+        controller.close()
+      }
+    },
+  })
+}
+
 export async function POST(req: NextRequest) {
   const body = (await req.json()) as ExpertiseRequest
   const question = body.question?.trim()
@@ -16,15 +35,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: 'A question is required.' }, { status: 400 })
   }
 
-  const evidence = await gatherEvidence(question)
-  const userPrompt = buildExpertisePrompt(question, evidence)
-  const stdout = await runClaude(EXPERTISE_SYSTEM_PROMPT, userPrompt)
+  const stream = sseStream(async (send) => {
+    send({ event: 'progress', message: 'Extracting keywords…' })
+    const evidence = await gatherEvidence(question, (msg) => send({ event: 'progress', message: msg }))
 
-  try {
+    send({ event: 'progress', message: 'Analysing evidence with Claude…' })
+    const stdout = await runClaude(EXPERTISE_SYSTEM_PROMPT, buildExpertisePrompt(question, evidence))
+
     const result = parseClaudeJsonOutput<ExpertiseOutput>(stdout)
     const id = await saveResult({ type: 'expertise', question, result, evidence })
-    return NextResponse.json({ ok: true, id, result, evidence })
-  } catch {
-    return NextResponse.json({ ok: false, error: 'Could not parse response.' }, { status: 502 })
-  }
+    send({ event: 'result', id, result, evidence })
+  })
+
+  return new Response(stream, {
+    headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' },
+  })
 }

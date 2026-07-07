@@ -10,6 +10,25 @@ import type { AnalyzeRequest, BriefingMeta, BriefingOutput } from '@/types'
 
 export const maxDuration = 120
 
+const encoder = new TextEncoder()
+
+function sseStream(work: (send: (data: object) => void) => Promise<void>): ReadableStream {
+  return new ReadableStream({
+    async start(controller) {
+      function send(data: object) {
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`))
+      }
+      try {
+        await work(send)
+      } catch (err) {
+        send({ event: 'error', message: err instanceof Error ? err.message : 'Unknown error' })
+      } finally {
+        controller.close()
+      }
+    },
+  })
+}
+
 export async function POST(req: NextRequest) {
   const body = (await req.json()) as AnalyzeRequest
   const { repoPath } = body
@@ -19,19 +38,21 @@ export async function POST(req: NextRequest) {
   }
 
   const resolved = repoPath.trim()
-  const ingest = ingestRepo(resolved)
-  if (!ingest.ok) {
-    return NextResponse.json({ ok: false, error: ingest.error }, { status: 422 })
-  }
 
-  const userPrompt = buildPmPrompt(ingest.files)
+  const stream = sseStream(async (send) => {
+    send({ event: 'progress', message: 'Reading repository files…' })
+    const ingest = ingestRepo(resolved)
+    if (!ingest.ok) {
+      send({ event: 'error', message: ingest.error })
+      return
+    }
 
-  const [stdout, contributors] = await Promise.all([
-    runClaude(PM_SYSTEM_PROMPT, userPrompt),
-    analyzeContributors(resolved),
-  ])
+    send({ event: 'progress', message: 'Scanning git history…' })
+    const contributors = await analyzeContributors(resolved)
 
-  try {
+    send({ event: 'progress', message: 'Generating briefing with Claude…' })
+    const stdout = await runClaude(PM_SYSTEM_PROMPT, buildPmPrompt(ingest.files))
+
     const briefing = parseClaudeJsonOutput<BriefingOutput>(stdout)
     const meta: BriefingMeta = {
       owner: contributors.owner,
@@ -39,9 +60,11 @@ export async function POST(req: NextRequest) {
       repoName: path.basename(resolved),
     }
     const id = await saveResult({ type: 'briefing', repoPath: resolved, briefing, meta })
-    return NextResponse.json({ ok: true, id, briefing, meta })
-  } catch {
-    return NextResponse.json({ ok: false, error: 'Could not parse response.' }, { status: 502 })
-  }
+    send({ event: 'result', id, briefing, meta })
+  })
+
+  return new Response(stream, {
+    headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' },
+  })
 }
 
