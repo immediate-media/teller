@@ -2,14 +2,16 @@ import type { EvidenceBundle, ExpertiseOutput } from '@/types'
 import { BriefingSection } from '@/components/briefing/BriefingSection'
 import { CandidateCard } from './CandidateCard'
 import { FollowUp } from './FollowUp'
+import { RatingButtons } from '@/components/RatingButtons'
 
 type Props = {
+  id: string
   result: ExpertiseOutput
   evidence: EvidenceBundle
   onReset: () => void
 }
 
-export function ExpertiseView({ result, evidence, onReset }: Props) {
+export function ExpertiseView({ id, result, evidence, onReset }: Props) {
   const hasAnyCandidates = result.makers.length > 0 || result.maintainers.length > 0
 
   return (
@@ -19,12 +21,15 @@ export function ExpertiseView({ result, evidence, onReset }: Props) {
           <h1 className="text-2xl font-semibold text-white tracking-tight">{result.question}</h1>
           <p className="mt-1 text-sm text-zinc-400">{result.summary}</p>
         </div>
-        <button
-          onClick={onReset}
-          className="shrink-0 text-xs text-zinc-500 hover:text-zinc-300 transition-colors mt-1"
-        >
-          ← New question
-        </button>
+        <div className="flex items-center gap-3">
+          <RatingButtons resultId={id} />
+          <button
+            onClick={onReset}
+            className="shrink-0 text-xs text-zinc-500 hover:text-zinc-300 transition-colors mt-1"
+          >
+            ← New question
+          </button>
+        </div>
       </div>
 
       <div className="space-y-3">

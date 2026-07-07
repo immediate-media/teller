@@ -1,4 +1,4 @@
-export type Mode = 'briefing' | 'expertise'
+export type Mode = 'briefing' | 'expertise' | 'history'
 
 type Props = {
   mode: Mode
@@ -8,6 +8,7 @@ type Props = {
 const TABS: { id: Mode; label: string }[] = [
   { id: 'briefing', label: 'Brief me on a project' },
   { id: 'expertise', label: 'Who to talk to' },
+  { id: 'history', label: 'History' },
 ]
 
 export function ModeTabs({ mode, onChange }: Props) {

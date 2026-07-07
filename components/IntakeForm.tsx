@@ -4,7 +4,7 @@ import { useState } from 'react'
 import type { BriefingMeta, BriefingOutput } from '@/types'
 
 type Props = {
-  onResult: (briefing: BriefingOutput, meta: BriefingMeta) => void
+  onResult: (id: string, briefing: BriefingOutput, meta: BriefingMeta) => void
 }
 
 export function IntakeForm({ onResult }: Props) {
@@ -31,7 +31,7 @@ export function IntakeForm({ onResult }: Props) {
         return
       }
 
-      onResult(data.briefing as BriefingOutput, data.meta as BriefingMeta)
+      onResult(data.id as string, data.briefing as BriefingOutput, data.meta as BriefingMeta)
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Something went wrong.'
       setError(message)

@@ -3,6 +3,7 @@ import { runClaude } from '@/lib/claude'
 import { gatherEvidence } from '@/lib/evidence'
 import { buildExpertisePrompt, EXPERTISE_SYSTEM_PROMPT } from '@/lib/prompts/expertise'
 import { parseClaudeJsonOutput } from '@/lib/parseClaudeJson'
+import { saveResult } from '@/lib/store'
 import type { ExpertiseRequest, ExpertiseOutput } from '@/types'
 
 export const maxDuration = 300
@@ -21,7 +22,8 @@ export async function POST(req: NextRequest) {
 
   try {
     const result = parseClaudeJsonOutput<ExpertiseOutput>(stdout)
-    return NextResponse.json({ ok: true, result, evidence })
+    const id = await saveResult({ type: 'expertise', question, result, evidence })
+    return NextResponse.json({ ok: true, id, result, evidence })
   } catch {
     return NextResponse.json({ ok: false, error: 'Could not parse response.' }, { status: 502 })
   }

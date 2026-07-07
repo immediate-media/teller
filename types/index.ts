@@ -42,7 +42,7 @@ export type BriefingMeta = {
 }
 
 export type AnalyzeResponse =
-  | { ok: true; briefing: BriefingOutput; meta: BriefingMeta }
+  | { ok: true; id: string; briefing: BriefingOutput; meta: BriefingMeta }
   | { ok: false; error: string }
 
 // --- Who to talk to ---
@@ -107,7 +107,7 @@ export type ExpertiseOutput = {
 }
 
 export type ExpertiseResponse =
-  | { ok: true; result: ExpertiseOutput; evidence: EvidenceBundle }
+  | { ok: true; id: string; result: ExpertiseOutput; evidence: EvidenceBundle }
   | { ok: false; error: string }
 
 // --- Follow-up thread ---
@@ -127,3 +127,37 @@ export type FollowUpRequest = {
 export type FollowUpResponse =
   | { ok: true; sessionId: string; answer: string }
   | { ok: false; error: string }
+
+// --- Stored results ---
+
+export type ResultRating = 'good' | 'bad' | null
+
+export type StoredBriefing = {
+  id: string
+  type: 'briefing'
+  repoPath: string
+  briefing: BriefingOutput
+  meta: BriefingMeta
+  rating: ResultRating
+  createdAt: string
+}
+
+export type StoredExpertise = {
+  id: string
+  type: 'expertise'
+  question: string
+  result: ExpertiseOutput
+  evidence: EvidenceBundle
+  rating: ResultRating
+  createdAt: string
+}
+
+export type StoredResult = StoredBriefing | StoredExpertise
+
+export type ResultSummary = {
+  id: string
+  type: 'briefing' | 'expertise'
+  title: string
+  rating: ResultRating
+  createdAt: string
+}

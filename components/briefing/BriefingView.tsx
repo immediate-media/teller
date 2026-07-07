@@ -2,14 +2,16 @@ import type { BriefingMeta, BriefingOutput } from '@/types'
 import { BriefingSection } from './BriefingSection'
 import { StatusBadge } from './StatusBadge'
 import { RiskRow } from './RiskRow'
+import { RatingButtons } from '@/components/RatingButtons'
 
 type Props = {
+  id: string
   briefing: BriefingOutput
   meta: BriefingMeta
   onReset: () => void
 }
 
-export function BriefingView({ briefing, meta, onReset }: Props) {
+export function BriefingView({ id, briefing, meta, onReset }: Props) {
   const { projectName, oneLiner, sections } = briefing
   const hasContributors = meta.owner || meta.recentContributors.length > 0
 
@@ -20,12 +22,15 @@ export function BriefingView({ briefing, meta, onReset }: Props) {
           <h1 className="text-2xl font-semibold text-white tracking-tight">{projectName}</h1>
           <p className="mt-1 text-sm text-zinc-400">{oneLiner}</p>
         </div>
-        <button
-          onClick={onReset}
-          className="shrink-0 text-xs text-zinc-500 hover:text-zinc-300 transition-colors mt-1"
-        >
-          ← New briefing
-        </button>
+        <div className="flex items-center gap-3">
+          <RatingButtons resultId={id} />
+          <button
+            onClick={onReset}
+            className="shrink-0 text-xs text-zinc-500 hover:text-zinc-300 transition-colors mt-1"
+          >
+            ← New briefing
+          </button>
+        </div>
       </div>
 
       {hasContributors && (

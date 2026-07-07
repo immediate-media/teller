@@ -6,10 +6,11 @@ import { BriefingView } from '@/components/briefing/BriefingView'
 import { ModeTabs, type Mode } from '@/components/ModeTabs'
 import { ExpertiseIntakeForm } from '@/components/ExpertiseIntakeForm'
 import { ExpertiseView } from '@/components/expertise/ExpertiseView'
-import type { BriefingMeta, BriefingOutput, ExpertiseResponse } from '@/types'
+import { HistoryView } from '@/components/HistoryView'
+import type { BriefingMeta, BriefingOutput, ExpertiseResponse, StoredResult } from '@/types'
 
 type ExpertiseSuccess = Extract<ExpertiseResponse, { ok: true }>
-type BriefingResult = { briefing: BriefingOutput; meta: BriefingMeta }
+type BriefingResult = { id: string; briefing: BriefingOutput; meta: BriefingMeta }
 
 export default function Home() {
   const [mode, setMode] = useState<Mode>('briefing')
@@ -20,10 +21,26 @@ export default function Home() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [briefingResult, expertise])
 
+  async function handleHistorySelect(id: string) {
+    const res = await fetch(`/api/results/${id}`)
+    if (!res.ok) return
+    const stored: StoredResult = await res.json()
+    if (stored.type === 'briefing') {
+      setBriefingResult({ id: stored.id, briefing: stored.briefing, meta: stored.meta })
+    } else {
+      setExpertise({ ok: true, id: stored.id, result: stored.result, evidence: stored.evidence })
+    }
+  }
+
   if (briefingResult) {
     return (
       <main className="min-h-screen bg-zinc-900 flex flex-col items-center justify-center px-4 py-16">
-        <BriefingView briefing={briefingResult.briefing} meta={briefingResult.meta} onReset={() => setBriefingResult(null)} />
+        <BriefingView
+          id={briefingResult.id}
+          briefing={briefingResult.briefing}
+          meta={briefingResult.meta}
+          onReset={() => setBriefingResult(null)}
+        />
       </main>
     )
   }
@@ -31,7 +48,12 @@ export default function Home() {
   if (expertise) {
     return (
       <main className="min-h-screen bg-zinc-900 flex flex-col items-center justify-center px-4 py-16">
-        <ExpertiseView result={expertise.result} evidence={expertise.evidence} onReset={() => setExpertise(null)} />
+        <ExpertiseView
+          id={expertise.id}
+          result={expertise.result}
+          evidence={expertise.evidence}
+          onReset={() => setExpertise(null)}
+        />
       </main>
     )
   }
@@ -40,9 +62,15 @@ export default function Home() {
     <main className="min-h-screen bg-zinc-900 flex flex-col items-center justify-center px-4 py-16">
       <div className="flex flex-col items-center">
         <ModeTabs mode={mode} onChange={setMode} />
-        {mode === 'briefing'
-          ? <IntakeForm onResult={(briefing, meta) => setBriefingResult({ briefing, meta })} />
-          : <ExpertiseIntakeForm onResult={setExpertise} />}
+        {mode === 'briefing' && (
+          <IntakeForm onResult={(id, briefing, meta) => setBriefingResult({ id, briefing, meta })} />
+        )}
+        {mode === 'expertise' && (
+          <ExpertiseIntakeForm onResult={setExpertise} />
+        )}
+        {mode === 'history' && (
+          <HistoryView onSelect={handleHistorySelect} />
+        )}
       </div>
     </main>
   )

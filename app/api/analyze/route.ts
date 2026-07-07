@@ -5,6 +5,7 @@ import { ingestRepo } from '@/lib/ingest'
 import { analyzeContributors } from '@/lib/ingest/contributors'
 import { buildPmPrompt, PM_SYSTEM_PROMPT } from '@/lib/prompts/pm'
 import { parseClaudeJsonOutput } from '@/lib/parseClaudeJson'
+import { saveResult } from '@/lib/store'
 import type { AnalyzeRequest, BriefingMeta, BriefingOutput } from '@/types'
 
 export const maxDuration = 120
@@ -37,7 +38,8 @@ export async function POST(req: NextRequest) {
       recentContributors: contributors.recentContributors,
       repoName: path.basename(resolved),
     }
-    return NextResponse.json({ ok: true, briefing, meta })
+    const id = await saveResult({ type: 'briefing', repoPath: resolved, briefing, meta })
+    return NextResponse.json({ ok: true, id, briefing, meta })
   } catch {
     return NextResponse.json({ ok: false, error: 'Could not parse response.' }, { status: 502 })
   }
