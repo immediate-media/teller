@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import type { ExpertiseResponse } from '@/types'
 import { ProgressSteps, type Step } from '@/components/ProgressSteps'
+import { DebugPanel, makeDebugEntry, useDebugMode, type DebugEntry } from '@/components/DebugPanel'
 
 type Props = {
   onResult: (data: Extract<ExpertiseResponse, { ok: true }>) => void
@@ -13,6 +14,9 @@ export function ExpertiseIntakeForm({ onResult }: Props) {
   const [loading, setLoading] = useState(false)
   const [steps, setSteps] = useState<Step[]>([])
   const [error, setError] = useState<string | null>(null)
+  const [debugEvents, setDebugEvents] = useState<DebugEntry[]>([])
+  const [fetchError, setFetchError] = useState<string | undefined>()
+  const debugMode = useDebugMode()
 
   function addStep(message: string) {
     setSteps((prev) => [
@@ -21,10 +25,17 @@ export function ExpertiseIntakeForm({ onResult }: Props) {
     ])
   }
 
+  function logDebug(raw: string) {
+    if (!debugMode) return
+    setDebugEvents((prev) => [...prev, makeDebugEntry(raw)])
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
     setSteps([])
+    setDebugEvents([])
+    setFetchError(undefined)
     setLoading(true)
 
     try {
@@ -35,8 +46,15 @@ export function ExpertiseIntakeForm({ onResult }: Props) {
       })
 
       if (!res.ok) {
-        const data = await res.json()
-        setError(data.error ?? 'Something went wrong.')
+        let errMsg = `Server returned ${res.status}`
+        try {
+          const data = await res.json()
+          errMsg = data.error ?? errMsg
+        } catch {
+          try { errMsg = `${errMsg}: ${await res.text()}` } catch { /* ignore */ }
+        }
+        setError(errMsg)
+        if (debugMode) setFetchError(errMsg)
         return
       }
 
@@ -55,7 +73,9 @@ export function ExpertiseIntakeForm({ onResult }: Props) {
         for (const chunk of chunks) {
           const line = chunk.trim()
           if (!line.startsWith('data: ')) continue
-          const data = JSON.parse(line.slice(6))
+          const raw = line.slice(6)
+          logDebug(raw)
+          const data = JSON.parse(raw)
 
           if (data.event === 'progress') {
             addStep(data.message)
@@ -70,7 +90,9 @@ export function ExpertiseIntakeForm({ onResult }: Props) {
         }
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong.')
+      const msg = err instanceof Error ? err.message : 'Something went wrong.'
+      setError(msg)
+      if (debugMode) setFetchError(msg)
     } finally {
       setLoading(false)
     }
@@ -116,6 +138,7 @@ export function ExpertiseIntakeForm({ onResult }: Props) {
         </button>
 
         <ProgressSteps steps={steps} />
+        {debugMode && <DebugPanel events={debugEvents} fetchError={fetchError} />}
       </form>
     </div>
   )
