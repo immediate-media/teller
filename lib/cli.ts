@@ -1,11 +1,3 @@
-import { spawn, type ChildProcess } from 'child_process'
-
+// CLAUDE_BIN is used by runClaudeTool for MCP-based flows (Atlassian evidence, follow-up).
+// The main analysis routes use the Anthropic SDK directly via lib/claude.ts.
 export const CLAUDE_BIN = process.env.CLAUDE_BIN ?? 'claude'
-
-export function spawnClaude(systemPrompt: string, userPrompt: string): ChildProcess {
-  const combined = `${systemPrompt}\n\n---\n\n${userPrompt}`
-  const child = spawn(CLAUDE_BIN, ['-p'], { env: process.env })
-  child.stdin.write(combined)
-  child.stdin.end()
-  return child
-}
