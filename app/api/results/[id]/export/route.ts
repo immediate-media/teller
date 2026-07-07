@@ -50,7 +50,7 @@ function mapExpertise(stored: StoredExpertise) {
     assigned_helper: topCandidate?.name ?? null,
     request_status: 'resolved',
     mcp_answer_text: stored.result.summary,
-    retrieved_context_json: stored.evidence,
+    retrieved_context_json: null,
     human_answer_text: null,
     is_solved: true,
     answer_types: 'auto',
