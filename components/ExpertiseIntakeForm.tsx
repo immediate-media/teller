@@ -1,14 +1,14 @@
 'use client'
 
 import { useState } from 'react'
-import type { BriefingMeta, BriefingOutput } from '@/types'
+import type { ExpertiseResponse } from '@/types'
 
 type Props = {
-  onResult: (briefing: BriefingOutput, meta: BriefingMeta) => void
+  onResult: (data: Extract<ExpertiseResponse, { ok: true }>) => void
 }
 
-export function IntakeForm({ onResult }: Props) {
-  const [repoPath, setRepoPath] = useState('')
+export function ExpertiseIntakeForm({ onResult }: Props) {
+  const [question, setQuestion] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -18,20 +18,20 @@ export function IntakeForm({ onResult }: Props) {
     setLoading(true)
 
     try {
-      const res = await fetch('/api/analyze', {
+      const res = await fetch('/api/expertise', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ repoPath }),
+        body: JSON.stringify({ question }),
       })
 
-      const data = await res.json()
+      const data: ExpertiseResponse = await res.json()
 
       if (!data.ok) {
-        setError(data.error ?? 'Something went wrong.')
+        setError(data.error)
         return
       }
 
-      onResult(data.briefing as BriefingOutput, data.meta as BriefingMeta)
+      onResult(data)
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Something went wrong.'
       setError(message)
@@ -43,29 +43,26 @@ export function IntakeForm({ onResult }: Props) {
   return (
     <div className="max-w-xl w-full">
       <div className="mb-8">
-        <h1 className="text-2xl font-semibold text-white tracking-tight">Project Teller</h1>
+        <h1 className="text-2xl font-semibold text-white tracking-tight">Who to talk to</h1>
         <p className="mt-1 text-sm text-zinc-400">
-          Point it at a project. Get a PM briefing in seconds.
+          Ask a question. Get pointed at the person with the evidence to back it up.
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <label htmlFor="repoPath" className="block text-sm font-medium text-zinc-300 mb-1.5">
-            Repository path
+          <label htmlFor="question" className="block text-sm font-medium text-zinc-300 mb-1.5">
+            What do you need help with?
           </label>
-          <input
-            id="repoPath"
-            type="text"
-            value={repoPath}
-            onChange={(e) => setRepoPath(e.target.value)}
-            placeholder="/Users/you/Repos/my-project"
+          <textarea
+            id="question"
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+            placeholder="e.g. Who knows about GTM consent validation?"
             required
-            className="w-full rounded-md bg-zinc-800 border border-zinc-700 px-3 py-2 text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            rows={3}
+            className="w-full rounded-md bg-zinc-800 border border-zinc-700 px-3 py-2 text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
           />
-          <p className="mt-1 text-xs text-zinc-500">
-            Absolute path to a local directory. Must contain a README.md.
-          </p>
         </div>
 
         {error && (
@@ -76,19 +73,18 @@ export function IntakeForm({ onResult }: Props) {
 
         <button
           type="submit"
-          disabled={loading || !repoPath.trim()}
+          disabled={loading || !question.trim()}
           className="w-full rounded-md bg-indigo-600 hover:bg-indigo-500 disabled:bg-zinc-700 disabled:text-zinc-500 disabled:cursor-not-allowed px-4 py-2.5 text-sm font-medium text-white transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-zinc-900"
         >
-          {loading ? 'Analysing…' : 'Generate briefing'}
+          {loading ? 'Searching…' : 'Find who to talk to'}
         </button>
 
         {loading && (
           <p className="text-center text-xs text-zinc-500">
-            Generating your briefing — usually 30–40 seconds.
+            Searching commit history, Jira, and Confluence — usually 20–40 seconds.
           </p>
         )}
       </form>
     </div>
   )
 }
-

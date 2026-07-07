@@ -1,19 +1,21 @@
-import type { BriefingOutput } from '@/types'
+import type { BriefingMeta, BriefingOutput } from '@/types'
 import { BriefingSection } from './BriefingSection'
 import { StatusBadge } from './StatusBadge'
 import { RiskRow } from './RiskRow'
 
 type Props = {
   briefing: BriefingOutput
+  meta: BriefingMeta
   onReset: () => void
 }
 
-export function BriefingView({ briefing, onReset }: Props) {
+export function BriefingView({ briefing, meta, onReset }: Props) {
   const { projectName, oneLiner, sections } = briefing
+  const hasContributors = meta.owner || meta.recentContributors.length > 0
 
   return (
     <div className="max-w-2xl w-full">
-      <div className="flex items-start justify-between gap-4 mb-6">
+      <div className="flex items-start justify-between gap-4 mb-4">
         <div>
           <h1 className="text-2xl font-semibold text-white tracking-tight">{projectName}</h1>
           <p className="mt-1 text-sm text-zinc-400">{oneLiner}</p>
@@ -25,6 +27,31 @@ export function BriefingView({ briefing, onReset }: Props) {
           ← New briefing
         </button>
       </div>
+
+      {hasContributors && (
+        <div className="flex items-start gap-8 mb-6 border border-zinc-800 rounded-lg px-5 py-4">
+          {meta.owner && (
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-1.5">Owner</p>
+              <p className="text-sm font-medium text-white">{meta.owner.name}</p>
+              <p className="text-xs text-zinc-500">{meta.owner.commitCount} commits</p>
+            </div>
+          )}
+          {meta.recentContributors.length > 0 && (
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-1.5">Recently active</p>
+              <div className="space-y-1">
+                {meta.recentContributors.map((c, i) => (
+                  <div key={i} className="flex items-baseline gap-2">
+                    <span className="text-sm text-zinc-300">{c.name}</span>
+                    <span className="text-xs text-zinc-600">{c.commitCount} commits</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="space-y-3">
         {/* Current state */}

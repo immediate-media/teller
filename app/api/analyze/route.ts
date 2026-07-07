@@ -1,48 +1,60 @@
+import type { ChildProcess } from 'child_process'
+import path from 'path'
 import { NextRequest, NextResponse } from 'next/server'
+import { spawnClaude } from '@/lib/cli'
+import { ingestRepo } from '@/lib/ingest'
+import { analyzeContributors } from '@/lib/ingest/contributors'
+import { buildPmPrompt, PM_SYSTEM_PROMPT } from '@/lib/prompts/pm'
+import { parseClaudeJsonOutput } from '@/lib/parseClaudeJson'
+import type { AnalyzeRequest, BriefingMeta, BriefingOutput } from '@/types'
 
 export const maxDuration = 120
-import { runClaude } from '@/lib/cli'
-import { ingestRepo } from '@/lib/ingest'
-import { buildPmPrompt, PM_SYSTEM_PROMPT } from '@/lib/prompts/pm'
-import type { AnalyzeRequest, AnalyzeResponse, BriefingOutput } from '@/types'
+
+function collectOutput(child: ChildProcess): Promise<{ stdout: string; exitCode: number | null }> {
+  return new Promise((resolve, reject) => {
+    let stdout = ''
+    child.stdout!.on('data', (chunk: Buffer) => { stdout += chunk.toString('utf-8') })
+    child.on('error', reject)
+    child.on('close', (code) => resolve({ stdout, exitCode: code }))
+  })
+}
 
 export async function POST(req: NextRequest) {
   const body = (await req.json()) as AnalyzeRequest
   const { repoPath } = body
 
   if (!repoPath?.trim()) {
-    return NextResponse.json<AnalyzeResponse>(
-      { ok: false, error: 'A repository path is required.' },
-      { status: 400 },
-    )
+    return NextResponse.json({ ok: false, error: 'A repository path is required.' }, { status: 400 })
   }
 
-  // Ingest repo files (README gate + PM filter + token cap happen here)
-  const ingest = ingestRepo(repoPath.trim())
+  const resolved = repoPath.trim()
+  const ingest = ingestRepo(resolved)
   if (!ingest.ok) {
-    return NextResponse.json<AnalyzeResponse>({ ok: false, error: ingest.error }, { status: 422 })
+    return NextResponse.json({ ok: false, error: ingest.error }, { status: 422 })
   }
 
   const userPrompt = buildPmPrompt(ingest.files)
+  const child = spawnClaude(PM_SYSTEM_PROMPT, userPrompt)
 
-  let raw: string
-  try {
-    raw = await runClaude(PM_SYSTEM_PROMPT, userPrompt)
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'Unknown error from Claude CLI'
-    return NextResponse.json<AnalyzeResponse>({ ok: false, error: message }, { status: 500 })
+  const [{ stdout, exitCode }, contributors] = await Promise.all([
+    collectOutput(child),
+    analyzeContributors(resolved),
+  ])
+
+  if (exitCode !== 0) {
+    return NextResponse.json({ ok: false, error: `Claude CLI exited with code ${exitCode}` }, { status: 502 })
   }
 
-  let briefing: BriefingOutput
   try {
-    const cleaned = raw.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim()
-    briefing = JSON.parse(cleaned)
+    const briefing = parseClaudeJsonOutput<BriefingOutput>(stdout)
+    const meta: BriefingMeta = {
+      owner: contributors.owner,
+      recentContributors: contributors.recentContributors,
+      repoName: path.basename(resolved),
+    }
+    return NextResponse.json({ ok: true, briefing, meta })
   } catch {
-    return NextResponse.json<AnalyzeResponse>(
-      { ok: false, error: 'Could not parse Claude response as JSON.' },
-      { status: 500 },
-    )
+    return NextResponse.json({ ok: false, error: 'Could not parse response.' }, { status: 502 })
   }
-
-  return NextResponse.json<AnalyzeResponse>({ ok: true, briefing })
 }
+
