@@ -1,36 +1,56 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Project Teller
 
-## Getting Started
+Project Teller is an internal tool that generates structured PM briefings from a local repository, and answers "who do I talk to about X?" by searching git history, Jira, and Confluence for the people with the most relevant context.
 
-First, run the development server:
+Built for Immediate Media. Runs locally — no data leaves your machine except the prompts sent to the Anthropic API.
+
+---
+
+## Getting started
+
+### 1. Clone and install
+
+```bash
+git clone https://github.com/immediate-media/teller.git
+cd teller
+npm install
+```
+
+### 2. Set up your environment
+
+Copy the example env file:
+
+```bash
+cp .env.local.example .env.local
+```
+
+Then open `.env.local` and fill in the values below. **API tokens are provided by your lead or a senior — ask them if you don't have them.**
+
+| Variable | Required | What it is |
+|---|---|---|
+| `ANTHROPIC_API_KEY` | ✅ Yes | Anthropic API key — powers the briefing and expertise analysis |
+| `JIRA_URL` | For "Who to talk to" | Your Jira instance URL, e.g. `https://yourorg.atlassian.net` |
+| `JIRA_USERNAME` | For "Who to talk to" | Your Atlassian account email |
+| `JIRA_API_TOKEN` | For "Who to talk to" | Jira API token |
+| `CONFLUENCE_URL` | For "Who to talk to" | Your Confluence instance URL |
+| `CONFLUENCE_USERNAME` | For "Who to talk to" | Your Atlassian account email |
+| `CONFLUENCE_API_TOKEN` | For "Who to talk to" | Confluence API token |
+| `CLAUDE_MODEL` | No | Override the AI model (default: `claude-opus-4-5`) |
+| `CLAUDE_BIN` | No | Path to Claude CLI binary — only needed for the follow-up thread feature |
+
+### 3. Run the dev server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Features
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Brief me on a project** — point it at a local repo path, get a structured PM briefing covering summary, current state, how it works, risks, dependencies, and more. Also surfaces the project owner and recent contributors from git history.
+- **Who to talk to** — ask a question, get back the people most likely to have the answer, backed by evidence from git commits, Jira issues, and Confluence pages.
+- **History** — every result is saved locally to `~/.teller/results/`. Re-view any past result without regenerating it.
+- **Rating** — mark results 👍 or 👎 to track response quality over time.
