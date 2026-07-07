@@ -32,31 +32,31 @@ export function HistoryView({ onSelect }: Props) {
   }, [])
 
   if (loading) {
-    return <p className="text-sm text-zinc-500">Loading history…</p>
+    return <p className="text-sm text-muted-foreground">Loading history…</p>
   }
 
   if (results.length === 0) {
     return (
       <div className="max-w-xl w-full text-center py-12">
-        <p className="text-sm text-zinc-500">No saved results yet. Generate a briefing or expertise result to see it here.</p>
+        <p className="text-sm text-muted-foreground">No saved results yet. Generate a briefing or expertise result to see it here.</p>
       </div>
     )
   }
 
   return (
-    <div className="max-w-xl w-full space-y-2">
+    <div className="max-w-xl w-full divide-y divide-border rounded-lg border border-border bg-card">
       {results.map((r) => (
         <button
           key={r.id}
           onClick={() => onSelect(r.id)}
-          className="w-full text-left border border-zinc-800 hover:border-zinc-600 rounded-lg px-4 py-3 transition-colors group"
+          className="w-full text-left px-4 py-3 transition-colors hover:bg-secondary/40 group"
         >
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-sm font-medium text-white truncate group-hover:text-indigo-300 transition-colors">
+              <p className="text-sm font-medium truncate group-hover:text-primary transition-colors">
                 {r.title}
               </p>
-              <p className="text-xs text-zinc-500 mt-0.5">
+              <p className="text-xs text-muted-foreground mt-0.5">
                 {TYPE_LABEL[r.type]} · {relativeDate(r.createdAt)}
               </p>
             </div>

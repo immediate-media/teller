@@ -28,28 +28,32 @@ export function RatingButtons({ resultId, initialRating = null }: Props) {
   }
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-1.5">
       <button
         onClick={() => rate('good')}
         disabled={saving}
-        title="Good result"
-        className={`px-2 py-1 rounded text-sm transition-colors disabled:opacity-50 ${
-          rating === 'good'
-            ? 'bg-emerald-950 text-emerald-400 border border-emerald-800'
-            : 'text-zinc-600 hover:text-zinc-400'
-        }`}
+        title="Accurate"
+        aria-pressed={rating === 'good'}
+        className={
+          'inline-flex size-8 items-center justify-center rounded-full border transition-colors disabled:opacity-50 ' +
+          (rating === 'good'
+            ? 'border-primary bg-primary text-primary-foreground'
+            : 'border-border bg-background text-muted-foreground hover:border-primary/50 hover:text-primary')
+        }
       >
         👍
       </button>
       <button
         onClick={() => rate('bad')}
         disabled={saving}
-        title="Bad result"
-        className={`px-2 py-1 rounded text-sm transition-colors disabled:opacity-50 ${
-          rating === 'bad'
-            ? 'bg-red-950 text-red-400 border border-red-800'
-            : 'text-zinc-600 hover:text-zinc-400'
-        }`}
+        title="Not accurate"
+        aria-pressed={rating === 'bad'}
+        className={
+          'inline-flex size-8 items-center justify-center rounded-full border transition-colors disabled:opacity-50 ' +
+          (rating === 'bad'
+            ? 'border-destructive bg-destructive text-destructive-foreground'
+            : 'border-border bg-background text-muted-foreground hover:border-destructive/50 hover:text-destructive')
+        }
       >
         👎
       </button>
@@ -57,7 +61,7 @@ export function RatingButtons({ resultId, initialRating = null }: Props) {
         <a
           href={`/api/results/${resultId}/export`}
           download
-          className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors ml-1"
+          className="ml-1 text-xs text-primary hover:underline transition-colors"
           title="Download schema export"
         >
           ↓ Export JSON

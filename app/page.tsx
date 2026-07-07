@@ -1,25 +1,31 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { ArrowLeft } from 'lucide-react'
+import { AppShell, type SideMode } from '@/components/AppShell'
 import { IntakeForm } from '@/components/IntakeForm'
 import { BriefingView } from '@/components/briefing/BriefingView'
-import { ModeTabs, type Mode } from '@/components/ModeTabs'
 import { ExpertiseIntakeForm } from '@/components/ExpertiseIntakeForm'
 import { ExpertiseView } from '@/components/expertise/ExpertiseView'
 import { HistoryView } from '@/components/HistoryView'
+import { cn } from '@/lib/utils'
 import type { BriefingMeta, BriefingOutput, ExpertiseResponse, StoredResult } from '@/types'
 
+type AskSubMode = 'briefing' | 'expertise'
 type ExpertiseSuccess = Extract<ExpertiseResponse, { ok: true }>
 type BriefingResult = { id: string; briefing: BriefingOutput; meta: BriefingMeta }
 
 export default function Home() {
-  const [mode, setMode] = useState<Mode>('briefing')
+  const [sideMode, setSideMode] = useState<SideMode>('ask')
+  const [subMode, setSubMode] = useState<AskSubMode>('briefing')
   const [briefingResult, setBriefingResult] = useState<BriefingResult | null>(null)
   const [expertise, setExpertise] = useState<ExpertiseSuccess | null>(null)
 
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-  }, [briefingResult, expertise])
+  function handleReset() {
+    setBriefingResult(null)
+    setExpertise(null)
+  }
 
   async function handleHistorySelect(id: string) {
     const res = await fetch(`/api/results/${id}`)
@@ -30,49 +36,123 @@ export default function Home() {
     } else {
       setExpertise({ ok: true, id: stored.id, result: stored.result, evidence: stored.evidence })
     }
+    setSideMode('ask')
   }
 
-  if (briefingResult) {
-    return (
-      <main className="min-h-screen bg-zinc-900 flex flex-col items-center justify-center px-4 py-16">
-        <BriefingView
-          id={briefingResult.id}
-          briefing={briefingResult.briefing}
-          meta={briefingResult.meta}
-          onReset={() => setBriefingResult(null)}
-        />
-      </main>
-    )
-  }
-
-  if (expertise) {
-    return (
-      <main className="min-h-screen bg-zinc-900 flex flex-col items-center justify-center px-4 py-16">
-        <ExpertiseView
-          id={expertise.id}
-          result={expertise.result}
-          evidence={expertise.evidence}
-          onReset={() => setExpertise(null)}
-        />
-      </main>
-    )
-  }
+  const showResult = !!briefingResult || !!expertise
 
   return (
-    <main className="min-h-screen bg-zinc-900 flex flex-col items-center justify-center px-4 py-16">
-      <div className="flex flex-col items-center">
-        <ModeTabs mode={mode} onChange={setMode} />
-        {mode === 'briefing' && (
-          <IntakeForm onResult={(id, briefing, meta) => setBriefingResult({ id, briefing, meta })} />
+    <AppShell mode={sideMode} onModeChange={(m) => { setSideMode(m); if (m === 'ask') handleReset() }}>
+      <AnimatePresence mode="wait">
+        {/* Result views */}
+        {briefingResult && (
+          <motion.div
+            key="briefing-result"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35 }}
+            className="mx-auto max-w-3xl px-6 py-10 md:py-14"
+          >
+            <button
+              onClick={handleReset}
+              className="-ml-1 mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <ArrowLeft className="size-4" /> New question
+            </button>
+            <BriefingView
+              id={briefingResult.id}
+              briefing={briefingResult.briefing}
+              meta={briefingResult.meta}
+            />
+          </motion.div>
         )}
-        {mode === 'expertise' && (
-          <ExpertiseIntakeForm onResult={setExpertise} />
+
+        {expertise && !briefingResult && (
+          <motion.div
+            key="expertise-result"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35 }}
+            className="mx-auto max-w-3xl px-6 py-10 md:py-14"
+          >
+            <button
+              onClick={handleReset}
+              className="-ml-1 mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <ArrowLeft className="size-4" /> New question
+            </button>
+            <ExpertiseView
+              id={expertise.id}
+              result={expertise.result}
+              evidence={expertise.evidence}
+            />
+          </motion.div>
         )}
-        {mode === 'history' && (
-          <HistoryView onSelect={handleHistorySelect} />
+
+        {/* Ask page */}
+        {!showResult && sideMode === 'ask' && (
+          <motion.div
+            key="ask"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35 }}
+            className="mx-auto max-w-3xl px-6 py-12 md:py-20"
+          >
+            <div className="mb-8">
+              <div className="bg-brand-gradient mb-4 h-1.5 w-20 rounded-full" />
+              <h1 className="font-display font-extrabold uppercase leading-[0.95] tracking-[-0.03em] text-[clamp(1.5rem,4.5vw,2.75rem)]">
+                What are you trying to{' '}
+                <span className="text-brand-gradient">figure out?</span>
+              </h1>
+            </div>
+
+            {/* Sub-mode selector */}
+            <div className="flex gap-2 mb-6">
+              {(['briefing', 'expertise'] as const).map((m) => (
+                <button
+                  key={m}
+                  onClick={() => setSubMode(m)}
+                  className={cn(
+                    'rounded-full border px-3.5 py-1.5 text-sm transition-colors',
+                    subMode === m
+                      ? 'border-primary bg-primary text-primary-foreground font-medium'
+                      : 'border-border bg-card text-muted-foreground hover:border-foreground/30 hover:text-foreground',
+                  )}
+                >
+                  {m === 'briefing' ? 'Project briefing' : 'Who to ask'}
+                </button>
+              ))}
+            </div>
+
+            {subMode === 'briefing' && (
+              <IntakeForm onResult={(id, briefing, meta) => setBriefingResult({ id, briefing, meta })} />
+            )}
+            {subMode === 'expertise' && (
+              <ExpertiseIntakeForm onResult={setExpertise} />
+            )}
+          </motion.div>
         )}
-      </div>
-    </main>
+
+        {/* History page */}
+        {sideMode === 'history' && (
+          <motion.div
+            key="history"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35 }}
+            className="mx-auto max-w-3xl px-6 py-12 md:py-20"
+          >
+            <div className="mb-8">
+              <div className="bg-brand-gradient mb-4 h-1.5 w-20 rounded-full" />
+              <h1 className="font-display font-extrabold uppercase leading-[0.95] tracking-[-0.03em] text-[clamp(1.5rem,4.5vw,2.75rem)]">
+                Past results
+              </h1>
+            </div>
+            <HistoryView onSelect={handleHistorySelect} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </AppShell>
   )
 }
 

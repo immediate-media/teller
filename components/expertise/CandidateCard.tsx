@@ -2,9 +2,9 @@ import type { ExpertiseCandidate } from '@/types'
 import { BriefingSection } from '@/components/briefing/BriefingSection'
 
 const CONFIDENCE_CONFIG: Record<ExpertiseCandidate['confidence'], { label: string; className: string }> = {
-  high: { label: 'High confidence', className: 'bg-emerald-950 text-emerald-400 border-emerald-800' },
-  medium: { label: 'Medium confidence', className: 'bg-amber-950 text-amber-400 border-amber-800' },
-  low: { label: 'Low confidence', className: 'bg-zinc-800 text-zinc-400 border-zinc-700' },
+  high: { label: 'High confidence', className: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+  medium: { label: 'Medium confidence', className: 'bg-amber-50 text-amber-700 border-amber-200' },
+  low: { label: 'Low confidence', className: 'bg-muted text-muted-foreground border-border' },
 }
 
 type Props = {
@@ -23,11 +23,11 @@ export function CandidateCard({ rank, candidate }: Props) {
         </span>
         {candidate.email && <span className="text-xs text-zinc-500 font-mono">{candidate.email}</span>}
       </div>
-      <p className="text-sm text-zinc-300 mb-3">{candidate.rationale}</p>
+      <p className="text-sm text-foreground/80 mb-3">{candidate.rationale}</p>
       {candidate.evidence.length > 0 && (
         <ul className="space-y-1 list-disc list-inside">
           {candidate.evidence.map((item, i) => (
-            <li key={i} className="text-xs text-zinc-400">
+            <li key={i} className="text-xs text-muted-foreground">
               {item}
             </li>
           ))}

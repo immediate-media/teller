@@ -1,10 +1,10 @@
 import type { BriefingStatus } from '@/types'
 
 const STATUS_CONFIG: Record<BriefingStatus, { label: string; className: string }> = {
-  live: { label: 'Live', className: 'bg-emerald-950 text-emerald-400 border-emerald-800' },
-  'in-review': { label: 'In Review', className: 'bg-amber-950 text-amber-400 border-amber-800' },
-  'in-progress': { label: 'In Progress', className: 'bg-blue-950 text-blue-400 border-blue-800' },
-  deprecated: { label: 'Deprecated', className: 'bg-zinc-800 text-zinc-400 border-zinc-700' },
+  live: { label: 'Live', className: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+  'in-review': { label: 'In Review', className: 'bg-amber-50 text-amber-700 border-amber-200' },
+  'in-progress': { label: 'In Progress', className: 'bg-blue-50 text-blue-700 border-blue-200' },
+  deprecated: { label: 'Deprecated', className: 'bg-muted text-muted-foreground border-border' },
 }
 
 export function StatusBadge({ status }: { status: BriefingStatus }) {

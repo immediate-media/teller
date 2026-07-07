@@ -5,8 +5,8 @@ type Props = {
 
 export function BriefingSection({ title, children }: Props) {
   return (
-    <section className="border border-zinc-800 rounded-lg p-5">
-      <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-3">{title}</h2>
+    <section className="border border-border rounded-xl p-5 bg-card shadow-[0_1px_0_rgba(0,0,0,0.02)]">
+      <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">{title}</h2>
       {children}
     </section>
   )

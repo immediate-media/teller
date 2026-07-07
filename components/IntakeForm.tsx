@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import type { BriefingMeta, BriefingOutput } from '@/types'
-import { ProgressSteps, type Step } from '@/components/ProgressSteps'
+import { ThinkingBubbles } from '@/components/ThinkingBubbles'
 import { DebugPanel, makeDebugEntry, useDebugMode, type DebugEntry } from '@/components/DebugPanel'
 
 type Props = {
@@ -12,18 +12,10 @@ type Props = {
 export function IntakeForm({ onResult }: Props) {
   const [repoPath, setRepoPath] = useState('')
   const [loading, setLoading] = useState(false)
-  const [steps, setSteps] = useState<Step[]>([])
   const [error, setError] = useState<string | null>(null)
   const [debugEvents, setDebugEvents] = useState<DebugEntry[]>([])
   const [fetchError, setFetchError] = useState<string | undefined>()
   const debugMode = useDebugMode()
-
-  function addStep(message: string) {
-    setSteps((prev) => [
-      ...prev.map((s) => ({ ...s, active: false })),
-      { message, active: true },
-    ])
-  }
 
   function logDebug(raw: string) {
     if (!debugMode) return
@@ -33,7 +25,6 @@ export function IntakeForm({ onResult }: Props) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
-    setSteps([])
     setDebugEvents([])
     setFetchError(undefined)
     setLoading(true)
@@ -77,10 +68,7 @@ export function IntakeForm({ onResult }: Props) {
           logDebug(raw)
           const data = JSON.parse(raw)
 
-          if (data.event === 'progress') {
-            addStep(data.message)
-          } else if (data.event === 'result') {
-            setSteps((prev) => prev.map((s) => ({ ...s, active: false })))
+          if (data.event === 'result') {
             onResult(data.id, data.briefing, data.meta)
             return
           } else if (data.event === 'error') {
@@ -99,19 +87,10 @@ export function IntakeForm({ onResult }: Props) {
   }
 
   return (
-    <div className="max-w-xl w-full">
-      <div className="mb-8">
-        <h1 className="text-2xl font-semibold text-white tracking-tight">Project Teller</h1>
-        <p className="mt-1 text-sm text-zinc-400">
-          Point it at a project. Get a PM briefing in seconds.
-        </p>
-      </div>
-
-      <form onSubmit={handleSubmit} className="space-y-5">
-        <div>
-          <label htmlFor="repoPath" className="block text-sm font-medium text-zinc-300 mb-1.5">
-            Repository path
-          </label>
+    <div className="w-full">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="flex items-center gap-2 rounded-lg border border-border bg-card/60 px-3 py-1.5 focus-within:border-foreground/40 focus-within:bg-card">
+          <label htmlFor="repoPath" className="sr-only">Repository path</label>
           <input
             id="repoPath"
             type="text"
@@ -119,31 +98,30 @@ export function IntakeForm({ onResult }: Props) {
             onChange={(e) => setRepoPath(e.target.value)}
             placeholder="/Users/you/Repos/my-project"
             required
-            className="w-full rounded-md bg-zinc-800 border border-zinc-700 px-3 py-2 text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            autoFocus
+            className="flex-1 bg-transparent py-1 text-sm outline-none placeholder:text-muted-foreground/60"
           />
-          <p className="mt-1 text-xs text-zinc-500">
-            Absolute path to a local directory. Must contain a README.md.
-          </p>
+          <button
+            type="submit"
+            disabled={loading || !repoPath.trim()}
+            className="min-h-9 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
+            {loading ? 'Working…' : 'Brief me'}
+          </button>
         </div>
+        <p className="text-xs text-muted-foreground">
+          Absolute path to a local directory. Must contain a README.md.
+        </p>
 
         {error && (
-          <div className="rounded-md bg-red-950 border border-red-800 px-4 py-3">
-            <p className="text-sm text-red-300">{error}</p>
+          <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3">
+            <p className="text-sm text-destructive">{error}</p>
           </div>
         )}
 
-        <button
-          type="submit"
-          disabled={loading || !repoPath.trim()}
-          className="w-full rounded-md bg-indigo-600 hover:bg-indigo-500 disabled:bg-zinc-700 disabled:text-zinc-500 disabled:cursor-not-allowed px-4 py-2.5 text-sm font-medium text-white transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-zinc-900"
-        >
-          {loading ? 'Working…' : 'Generate briefing'}
-        </button>
-
-        <ProgressSteps steps={steps} />
+        {loading && <ThinkingBubbles />}
         {debugMode && <DebugPanel events={debugEvents} fetchError={fetchError} />}
       </form>
     </div>
   )
 }
-

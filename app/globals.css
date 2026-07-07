@@ -1,26 +1,120 @@
-@import "tailwindcss";
+@import "tailwindcss" source(none);
+@source "../app";
+@source "../components";
+@import "tw-animate-css";
+@import "@fontsource/barlow/300.css";
+@import "@fontsource/barlow/400.css";
+@import "@fontsource/barlow/500.css";
+@import "@fontsource/barlow/600.css";
+@import "@fontsource/barlow/700.css";
+@import "@fontsource/barlow/800.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  --font-sans: "Barlow", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Barlow", ui-sans-serif, system-ui, sans-serif;
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-im-blue: var(--im-blue);
+  --color-im-cyan: var(--im-cyan);
+  --color-im-navy: var(--im-navy);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+:root {
+  --radius: 0.625rem;
+
+  /* Immediate Media brand palette */
+  --im-blue: #1b8bea;
+  --im-cyan: #41bff7;
+  --im-navy: #0a58a5;
+  --im-blue-soft: color-mix(in oklab, #1b8bea 12%, white);
+
+  --brand-gradient:
+    radial-gradient(120% 90% at 15% 20%, color-mix(in oklab, var(--im-cyan) 85%, transparent) 0%, transparent 55%),
+    radial-gradient(110% 90% at 85% 90%, color-mix(in oklab, var(--im-navy) 85%, transparent) 0%, transparent 55%),
+    linear-gradient(135deg, var(--im-blue), var(--im-blue));
+
+  --background: #ffffff;
+  --foreground: #0b1a2e;
+  --card: #ffffff;
+  --card-foreground: #0b1a2e;
+  --primary: var(--im-navy);
+  --primary-foreground: #ffffff;
+  --secondary: color-mix(in oklab, var(--im-cyan) 10%, white);
+  --secondary-foreground: #062f5a;
+  --muted: color-mix(in oklab, var(--im-blue) 6%, white);
+  --muted-foreground: #334155;
+  --accent: color-mix(in oklab, var(--im-cyan) 18%, white);
+  --accent-foreground: #062f5a;
+  --destructive: #c81324;
+  --destructive-foreground: #ffffff;
+  --border: color-mix(in oklab, var(--im-blue) 18%, white);
+  --input: color-mix(in oklab, var(--im-blue) 18%, white);
+  --ring: var(--im-navy);
+
+  --sidebar: color-mix(in oklab, var(--im-blue) 4%, white);
+  --sidebar-foreground: #0b1a2e;
+  --sidebar-accent: color-mix(in oklab, var(--im-cyan) 12%, white);
+  --sidebar-accent-foreground: var(--im-navy);
+  --sidebar-border: color-mix(in oklab, var(--im-blue) 14%, white);
+}
+
+@utility bg-brand-gradient {
+  background: var(--brand-gradient);
+  background-color: var(--im-blue);
+}
+
+@utility text-brand-gradient {
+  background: linear-gradient(135deg, var(--im-navy), var(--im-blue) 45%, var(--im-cyan));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
   }
-}
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+  }
+
+  h1, h2, h3, .font-display {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
+
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
 }

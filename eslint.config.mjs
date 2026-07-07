@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Separate project — has its own lint config
+    "Knowledge Compass/**",
   ]),
 ]);
 

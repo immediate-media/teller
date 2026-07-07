@@ -8,48 +8,39 @@ type Props = {
   id: string
   briefing: BriefingOutput
   meta: BriefingMeta
-  onReset: () => void
 }
 
-export function BriefingView({ id, briefing, meta, onReset }: Props) {
+export function BriefingView({ id, briefing, meta }: Props) {
   const { projectName, oneLiner, sections } = briefing
   const hasContributors = meta.owner || meta.recentContributors.length > 0
 
   return (
     <div className="max-w-2xl w-full">
-      <div className="flex items-start justify-between gap-4 mb-4">
+      <div className="flex items-start justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-semibold text-white tracking-tight">{projectName}</h1>
-          <p className="mt-1 text-sm text-zinc-400">{oneLiner}</p>
+          <h1 className="text-2xl font-display font-bold tracking-tight">{projectName}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{oneLiner}</p>
         </div>
-        <div className="flex items-center gap-3">
-          <RatingButtons resultId={id} />
-          <button
-            onClick={onReset}
-            className="shrink-0 text-xs text-zinc-500 hover:text-zinc-300 transition-colors mt-1"
-          >
-            ← New briefing
-          </button>
-        </div>
+        <RatingButtons resultId={id} />
       </div>
 
       {hasContributors && (
-        <div className="flex items-start gap-8 mb-6 border border-zinc-800 rounded-lg px-5 py-4">
+        <div className="flex items-start gap-8 mb-6 border border-border rounded-xl px-5 py-4 bg-card">
           {meta.owner && (
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-1.5">Owner</p>
-              <p className="text-sm font-medium text-white">{meta.owner.name}</p>
-              <p className="text-xs text-zinc-500">{meta.owner.commitCount} commits</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">Owner</p>
+              <p className="text-sm font-medium">{meta.owner.name}</p>
+              <p className="text-xs text-muted-foreground">{meta.owner.commitCount} commits</p>
             </div>
           )}
           {meta.recentContributors.length > 0 && (
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-1.5">Recently active</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">Recently active</p>
               <div className="space-y-1">
                 {meta.recentContributors.map((c, i) => (
                   <div key={i} className="flex items-baseline gap-2">
-                    <span className="text-sm text-zinc-300">{c.name}</span>
-                    <span className="text-xs text-zinc-600">{c.commitCount} commits</span>
+                    <span className="text-sm">{c.name}</span>
+                    <span className="text-xs text-muted-foreground">{c.commitCount} commits</span>
                   </div>
                 ))}
               </div>
@@ -59,58 +50,51 @@ export function BriefingView({ id, briefing, meta, onReset }: Props) {
       )}
 
       <div className="space-y-3">
-        {/* Current state */}
         <BriefingSection title="Current state">
           <div className="flex items-center gap-2 mb-2">
             <StatusBadge status={sections.currentState.status} />
             {sections.currentState.version && (
-              <span className="text-xs text-zinc-500">v{sections.currentState.version}</span>
+              <span className="text-xs text-muted-foreground">v{sections.currentState.version}</span>
             )}
             {sections.currentState.tickets?.map((t) => (
-              <span key={t} className="text-xs text-indigo-400 font-mono">{t}</span>
+              <span key={t} className="text-xs text-primary font-mono">{t}</span>
             ))}
           </div>
-          <p className="text-sm text-zinc-300">{sections.currentState.notes}</p>
+          <p className="text-sm text-foreground/80">{sections.currentState.notes}</p>
         </BriefingSection>
 
-        {/* Summary */}
         <BriefingSection title="Summary">
-          <p className="text-sm text-zinc-300">{sections.summary}</p>
+          <p className="text-sm text-foreground/80">{sections.summary}</p>
         </BriefingSection>
 
-        {/* Why it exists */}
         <BriefingSection title="Why it exists">
-          <p className="text-sm text-zinc-300">{sections.whyItExists}</p>
+          <p className="text-sm text-foreground/80">{sections.whyItExists}</p>
         </BriefingSection>
 
-        {/* How it works */}
         <BriefingSection title="How it works">
-          <p className="text-sm text-zinc-300">{sections.howItWorks}</p>
+          <p className="text-sm text-foreground/80">{sections.howItWorks}</p>
         </BriefingSection>
 
-        {/* Who is affected */}
         <BriefingSection title="Who is affected">
-          <p className="text-sm text-zinc-300">{sections.whoIsAffected}</p>
+          <p className="text-sm text-foreground/80">{sections.whoIsAffected}</p>
         </BriefingSection>
 
-        {/* Dependencies */}
         {sections.dependencies.length > 0 && (
           <BriefingSection title="Dependencies">
             <div className="space-y-2">
               {sections.dependencies.map((dep, i) => (
-                <div key={i} className="border-b border-zinc-800 pb-2 last:border-0 last:pb-0">
+                <div key={i} className="border-b border-border pb-2 last:border-0 last:pb-0">
                   <div className="flex items-baseline gap-2">
-                    <span className="text-sm font-medium text-white">{dep.name}</span>
-                    <span className="text-xs text-zinc-500">{dep.relationship}</span>
+                    <span className="text-sm font-medium">{dep.name}</span>
+                    <span className="text-xs text-muted-foreground">{dep.relationship}</span>
                   </div>
-                  {dep.note && <p className="text-xs text-zinc-400 mt-0.5">{dep.note}</p>}
+                  {dep.note && <p className="text-xs text-muted-foreground mt-0.5">{dep.note}</p>}
                 </div>
               ))}
             </div>
           </BriefingSection>
         )}
 
-        {/* Risks */}
         {sections.risks.length > 0 && (
           <BriefingSection title="Risks &amp; gotchas">
             {sections.risks.map((r, i) => (
@@ -119,24 +103,21 @@ export function BriefingView({ id, briefing, meta, onReset }: Props) {
           </BriefingSection>
         )}
 
-        {/* Who to talk to */}
         <BriefingSection title="Who to talk to">
-          <p className="text-sm text-zinc-300">{sections.whoToTalkTo}</p>
+          <p className="text-sm text-foreground/80">{sections.whoToTalkTo}</p>
         </BriefingSection>
 
-        {/* Upcoming work */}
         <BriefingSection title="Upcoming work">
-          <p className="text-sm text-zinc-300">{sections.upcomingWork}</p>
+          <p className="text-sm text-foreground/80">{sections.upcomingWork}</p>
         </BriefingSection>
 
-        {/* Glossary */}
         {sections.glossary.length > 0 && (
           <BriefingSection title="Glossary">
             <dl className="space-y-2">
               {sections.glossary.map((g, i) => (
                 <div key={i}>
-                  <dt className="text-sm font-medium text-white">{g.term}</dt>
-                  <dd className="text-sm text-zinc-400">{g.definition}</dd>
+                  <dt className="text-sm font-medium">{g.term}</dt>
+                  <dd className="text-sm text-muted-foreground">{g.definition}</dd>
                 </div>
               ))}
             </dl>
