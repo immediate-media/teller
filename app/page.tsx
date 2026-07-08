@@ -18,7 +18,7 @@ type BriefingResult = { id: string; briefing: BriefingOutput; meta: BriefingMeta
 
 export default function Home() {
   const [sideMode, setSideMode] = useState<SideMode>('ask')
-  const [subMode, setSubMode] = useState<AskSubMode>('briefing')
+  const [subMode, setSubMode] = useState<AskSubMode>('expertise')
   const [briefingResult, setBriefingResult] = useState<BriefingResult | null>(null)
   const [expertise, setExpertise] = useState<ExpertiseSuccess | null>(null)
 
@@ -106,30 +106,41 @@ export default function Home() {
               </h1>
             </div>
 
-            {/* Sub-mode selector */}
-            <div className="flex gap-2 mb-6">
-              {(['briefing', 'expertise'] as const).map((m) => (
+            {/* Unified search container */}
+            <div className="rounded-xl border border-border bg-card/60 overflow-hidden focus-within:border-foreground/40 focus-within:bg-card transition-colors">
+              {/* Mode pills row */}
+              <div className="flex items-center gap-2 px-3 pt-3 pb-2.5 border-b border-border/60">
                 <button
-                  key={m}
-                  onClick={() => setSubMode(m)}
+                  disabled
+                  title="Coming soon"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-border/50 bg-transparent px-3 py-1 text-xs font-medium text-muted-foreground/40 cursor-not-allowed select-none"
+                >
+                  Project briefing
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSubMode('expertise')}
                   className={cn(
-                    'rounded-full border px-3.5 py-1.5 text-sm transition-colors',
-                    subMode === m
-                      ? 'border-primary bg-primary text-primary-foreground font-medium'
-                      : 'border-border bg-card text-muted-foreground hover:border-foreground/30 hover:text-foreground',
+                    'inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium transition-colors',
+                    subMode === 'expertise'
+                      ? 'border-primary bg-primary text-primary-foreground'
+                      : 'border-border bg-transparent text-muted-foreground hover:border-foreground/30 hover:text-foreground',
                   )}
                 >
-                  {m === 'briefing' ? 'Project briefing' : 'Who to ask'}
+                  Who to ask
                 </button>
-              ))}
-            </div>
+              </div>
 
-            {subMode === 'briefing' && (
-              <IntakeForm onResult={(id, briefing, meta) => setBriefingResult({ id, briefing, meta })} />
-            )}
-            {subMode === 'expertise' && (
-              <ExpertiseIntakeForm onResult={setExpertise} />
-            )}
+              {/* Form area */}
+              <div className="px-3 py-2.5">
+                {subMode === 'briefing' && (
+                  <IntakeForm onResult={(id, briefing, meta) => setBriefingResult({ id, briefing, meta })} />
+                )}
+                {subMode === 'expertise' && (
+                  <ExpertiseIntakeForm onResult={setExpertise} />
+                )}
+              </div>
+            </div>
           </motion.div>
         )}
 

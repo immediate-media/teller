@@ -88,8 +88,8 @@ export function IntakeForm({ onResult }: Props) {
 
   return (
     <div className="w-full">
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="flex items-center gap-2 rounded-lg border border-border bg-card/60 px-3 py-1.5 focus-within:border-foreground/40 focus-within:bg-card">
+      <form onSubmit={handleSubmit} className="space-y-3">
+        <div className="flex items-center gap-2">
           <label htmlFor="repoPath" className="sr-only">Repository path</label>
           <input
             id="repoPath"

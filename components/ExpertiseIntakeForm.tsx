@@ -88,8 +88,8 @@ export function ExpertiseIntakeForm({ onResult }: Props) {
 
   return (
     <div className="w-full">
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="rounded-lg border border-border bg-card/60 px-3 py-1.5 focus-within:border-foreground/40 focus-within:bg-card">
+      <form onSubmit={handleSubmit} className="space-y-3">
+        <div>
           <label htmlFor="question" className="sr-only">What do you need help with?</label>
           <textarea
             id="question"
