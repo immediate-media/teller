@@ -59,39 +59,43 @@ export function FollowUp({ question, result, evidence }: Props) {
   return (
     <BriefingSection title="Dig deeper">
       {turns.length > 0 && (
-        <div className="space-y-4 mb-4">
+        <div className="space-y-4 mb-5">
           {turns.map((turn, i) => (
             <div key={i} className="border-b border-border pb-4 last:border-0 last:pb-0">
-              <p className="text-sm font-medium mb-1">{turn.question}</p>
-              <p className="text-sm text-foreground/80 whitespace-pre-wrap">{turn.answer}</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
+                {turn.question}
+              </p>
+              <p className="text-sm text-foreground/80 leading-relaxed">{turn.answer}</p>
             </div>
           ))}
         </div>
       )}
 
-      <form onSubmit={handleAsk} className="space-y-2">
-        <textarea
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="e.g. Follow the FAB2-167 link — who else is involved?"
-          rows={2}
-          className="w-full rounded-md bg-card border border-border px-3 py-2 text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent resize-none"
-        />
+      <form onSubmit={handleAsk}>
+        <div className="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/30 px-3 py-2 focus-within:border-foreground/30 transition-colors">
+          <label htmlFor="followup-question" className="sr-only">Dig deeper</label>
+          <input
+            id="followup-question"
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="e.g. Who else is on FAB2-167?"
+            className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground/60"
+          />
+          <button
+            type="submit"
+            disabled={loading || !input.trim()}
+            className="shrink-0 rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
+          >
+            {loading ? 'Digging…' : 'Ask'}
+          </button>
+        </div>
 
         {error && (
-          <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3">
+          <div className="mt-2 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3">
             <p className="text-sm text-destructive">{error}</p>
           </div>
         )}
-
-        <button
-          type="submit"
-          disabled={loading || !input.trim()}
-          className="rounded-md bg-primary hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-        >
-          {loading ? 'Digging…' : 'Ask'}
-        </button>
-        {loading && <p className="text-xs text-muted-foreground">Fetching more detail — this can take a minute.</p>}
       </form>
     </BriefingSection>
   )

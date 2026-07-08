@@ -21,12 +21,54 @@ export function ExpertiseView({ id, result, evidence }: Props) {
   const hasAnyCandidates = result.makers.length > 0 || result.maintainers.length > 0
   const confluenceSkipped = evidence.confluence.status === 'skipped' || evidence.confluence.status === 'error'
 
+  const topMatch = result.maintainers[0] ?? result.makers[0] ?? null
+  const totalCount = result.maintainers.length + result.makers.length
+
+  const sourceParts = [
+    evidence.git.status === 'ok' && evidence.git.items.length > 0
+      && `Git (${evidence.git.items.length} contributor${evidence.git.items.length !== 1 ? 's' : ''})`,
+    evidence.jira.status === 'ok' && evidence.jira.items.length > 0
+      && `Jira (${evidence.jira.items.length} issue${evidence.jira.items.length !== 1 ? 's' : ''})`,
+    evidence.confluence.status === 'ok' && evidence.confluence.items.length > 0
+      && `Confluence (${evidence.confluence.items.length} page${evidence.confluence.items.length !== 1 ? 's' : ''})`,
+  ].filter(Boolean) as string[]
+
+  type Bullet = { label: string; value: string }
+  const bullets: Bullet[] = [
+    topMatch && {
+      label: 'Top match',
+      value: `${topMatch.name} · ${topMatch.confidence} confidence`,
+    },
+    totalCount > 0 && {
+      label: 'People found',
+      value: [
+        result.maintainers.length > 0 && `${result.maintainers.length} maintaining`,
+        result.makers.length > 0 && `${result.makers.length} made it`,
+      ].filter(Boolean).join(', '),
+    },
+    sourceParts.length > 0 && {
+      label: 'Sources',
+      value: sourceParts.join(' · '),
+    },
+  ].filter(Boolean) as Bullet[]
+
   return (
     <div className="max-w-2xl w-full">
       <div className="flex items-start justify-between gap-4 mb-6">
-        <div>
+        <div className="flex-1 min-w-0">
           <h1 className="text-2xl font-display font-bold tracking-tight">{result.question}</h1>
-          <p className="mt-1 text-sm text-muted-foreground">{result.summary}</p>
+          {bullets.length > 0 && (
+            <ul className="mt-3 space-y-1.5">
+              {bullets.map((b) => (
+                <li key={b.label} className="flex items-baseline gap-3 text-sm">
+                  <span className="w-[88px] shrink-0 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground leading-5">
+                    {b.label}
+                  </span>
+                  <span className="text-foreground/80">{b.value}</span>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
         <RatingButtons resultId={id} />
       </div>

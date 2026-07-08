@@ -2,14 +2,14 @@
 
 import { useState } from 'react'
 import type { ExpertiseResponse } from '@/types'
-import { ThinkingBubbles } from '@/components/ThinkingBubbles'
 import { DebugPanel, makeDebugEntry, useDebugMode, type DebugEntry } from '@/components/DebugPanel'
 
 type Props = {
   onResult: (data: Extract<ExpertiseResponse, { ok: true }>) => void
+  onLoadingChange?: (loading: boolean) => void
 }
 
-export function ExpertiseIntakeForm({ onResult }: Props) {
+export function ExpertiseIntakeForm({ onResult, onLoadingChange }: Props) {
   const [question, setQuestion] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -28,6 +28,7 @@ export function ExpertiseIntakeForm({ onResult }: Props) {
     setDebugEvents([])
     setFetchError(undefined)
     setLoading(true)
+    onLoadingChange?.(true)
 
     try {
       const res = await fetch('/api/expertise', {
@@ -83,44 +84,42 @@ export function ExpertiseIntakeForm({ onResult }: Props) {
       if (debugMode) setFetchError(msg)
     } finally {
       setLoading(false)
+      onLoadingChange?.(false)
     }
   }
 
   return (
     <div className="w-full">
-      <form onSubmit={handleSubmit} className="space-y-3">
-        <div>
+      <form onSubmit={handleSubmit}>
+        <div className="flex items-center gap-2 px-3 py-2.5">
           <label htmlFor="question" className="sr-only">What do you need help with?</label>
-          <textarea
+          <input
             id="question"
+            type="text"
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
             placeholder="e.g. Who knows about GTM consent validation?"
             required
             autoFocus
-            rows={3}
-            className="w-full bg-transparent py-1 text-sm outline-none placeholder:text-muted-foreground/60 resize-none"
+            className="flex-1 bg-transparent py-1 text-sm outline-none placeholder:text-muted-foreground/60"
           />
-          <div className="flex justify-end pt-1">
-            <button
-              type="submit"
-              disabled={loading || !question.trim()}
-              className="min-h-9 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-            >
-              {loading ? 'Working…' : 'Find who to ask'}
-            </button>
-          </div>
+          <button
+            type="submit"
+            disabled={loading || !question.trim()}
+            className="shrink-0 min-h-9 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
+            {loading ? 'Working…' : 'Find who to ask'}
+          </button>
         </div>
 
         {error && (
-          <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3">
+          <div className="mx-3 mb-2.5 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3">
             <p className="text-sm text-destructive">{error}</p>
           </div>
         )}
-
-        {loading && <ThinkingBubbles />}
-        {debugMode && <DebugPanel events={debugEvents} fetchError={fetchError} />}
       </form>
+
+      {debugMode && <DebugPanel events={debugEvents} fetchError={fetchError} />}
     </div>
   )
 }

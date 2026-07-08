@@ -9,6 +9,7 @@ import { BriefingView } from '@/components/briefing/BriefingView'
 import { ExpertiseIntakeForm } from '@/components/ExpertiseIntakeForm'
 import { ExpertiseView } from '@/components/expertise/ExpertiseView'
 import { HistoryView } from '@/components/HistoryView'
+import { ThinkingBubbles } from '@/components/ThinkingBubbles'
 import { cn } from '@/lib/utils'
 import type { BriefingMeta, BriefingOutput, ExpertiseResponse, StoredResult } from '@/types'
 
@@ -21,6 +22,7 @@ export default function Home() {
   const [subMode, setSubMode] = useState<AskSubMode>('expertise')
   const [briefingResult, setBriefingResult] = useState<BriefingResult | null>(null)
   const [expertise, setExpertise] = useState<ExpertiseSuccess | null>(null)
+  const [expertiseLoading, setExpertiseLoading] = useState(false)
 
   function handleReset() {
     setBriefingResult(null)
@@ -101,46 +103,61 @@ export default function Home() {
             <div className="mb-8">
               <div className="bg-brand-gradient mb-4 h-1.5 w-20 rounded-full" />
               <h1 className="font-display font-extrabold uppercase leading-[0.95] tracking-[-0.03em] text-[clamp(1.5rem,4.5vw,2.75rem)]">
-                What are you trying to{' '}
-                <span className="text-brand-gradient">figure out?</span>
+                What are you
+                <br />
+                <span className="text-brand-gradient">trying to figure out?</span>
               </h1>
             </div>
 
             {/* Unified search container */}
             <div className="rounded-xl border border-border bg-card/60 overflow-hidden focus-within:border-foreground/40 focus-within:bg-card transition-colors">
-              {/* Mode pills row */}
-              <div className="flex items-center gap-2 px-3 pt-3 pb-2.5 border-b border-border/60">
-                <button
-                  disabled
-                  title="Coming soon"
-                  className="inline-flex items-center gap-1.5 rounded-full border border-border/50 bg-transparent px-3 py-1 text-xs font-medium text-muted-foreground/40 cursor-not-allowed select-none"
-                >
-                  Project briefing
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSubMode('expertise')}
-                  className={cn(
-                    'inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium transition-colors',
-                    subMode === 'expertise'
-                      ? 'border-primary bg-primary text-primary-foreground'
-                      : 'border-border bg-transparent text-muted-foreground hover:border-foreground/30 hover:text-foreground',
-                  )}
-                >
-                  Who to ask
-                </button>
-              </div>
+              <div className="flex items-stretch">
+                {/* Mode pills — left column */}
+                <div className="flex items-center gap-2 px-3 border-r border-border/60 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setSubMode('expertise')}
+                    className={cn(
+                      'inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium transition-colors',
+                      subMode === 'expertise'
+                        ? 'border-primary bg-primary text-primary-foreground'
+                        : 'border-border bg-transparent text-muted-foreground hover:border-foreground/30 hover:text-foreground',
+                    )}
+                  >
+                    Who to ask
+                  </button>
+                  <button
+                    disabled
+                    title="Coming soon"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-border/50 bg-transparent px-3 py-1 text-xs font-medium text-muted-foreground/40 cursor-not-allowed select-none"
+                  >
+                    What is
+                    <span className="rounded-full bg-amber-400/90 px-1.5 py-px text-[8px] font-bold leading-none text-amber-900">
+                      TBC
+                    </span>
+                  </button>
+                </div>
 
-              {/* Form area */}
-              <div className="px-3 py-2.5">
-                {subMode === 'briefing' && (
-                  <IntakeForm onResult={(id, briefing, meta) => setBriefingResult({ id, briefing, meta })} />
-                )}
-                {subMode === 'expertise' && (
-                  <ExpertiseIntakeForm onResult={setExpertise} />
-                )}
+                {/* Active form — inline, fills remaining width */}
+                <div className="flex-1 min-w-0">
+                  {subMode === 'briefing' && (
+                    <IntakeForm onResult={(id, briefing, meta) => setBriefingResult({ id, briefing, meta })} />
+                  )}
+                  {subMode === 'expertise' && (
+                    <ExpertiseIntakeForm
+                      onResult={setExpertise}
+                      onLoadingChange={setExpertiseLoading}
+                    />
+                  )}
+                </div>
               </div>
             </div>
+
+            {expertiseLoading && (
+              <div className="mt-4">
+                <ThinkingBubbles />
+              </div>
+            )}
           </motion.div>
         )}
 

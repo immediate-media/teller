@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
     '--mcp-config', configPath,
     '--strict-mcp-config',
     '--allowedTools', ALLOWED_TOOLS,
-    '--permission-mode', 'default',
+    '--permission-mode', 'bypassPermissions',
     '--output-format', 'json',
   ]
 

@@ -14,62 +14,29 @@ const MAX_KEYWORDS = 3
 type AtlassianEvidence = { jira: EvidenceBundle['jira']; confluence: EvidenceBundle['confluence'] }
 type RawAtlassianResult = { jira: JiraEvidenceItem[]; confluence: ConfluenceEvidenceItem[] }
 
-const OUTPUT_SCHEMA = {
-  type: 'object',
-  properties: {
-    jira: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          key: { type: 'string' },
-          summary: { type: 'string' },
-          status: { type: 'string' },
-          assignee: { type: ['string', 'null'] },
-          reporter: { type: ['string', 'null'] },
-          url: { type: 'string' },
-          updated: { type: 'string' },
-        },
-        required: ['key', 'summary', 'status', 'url', 'updated'],
-      },
-    },
-    confluence: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          id: { type: 'string' },
-          title: { type: 'string' },
-          spaceKey: { type: ['string', 'null'] },
-          author: { type: ['string', 'null'] },
-          url: { type: 'string' },
-          lastModified: { type: ['string', 'null'] },
-        },
-        required: ['id', 'title', 'url'],
-      },
-    },
-  },
-  required: ['jira', 'confluence'],
-}
 
 function buildPrompt(keywords: string[]): string {
   const clause = keywords
     .slice(0, MAX_KEYWORDS)
     .map((kw) => `text ~ "${kw.replace(/"/g, '')}"`)
     .join(' OR ')
-  return `Relevance and recency both matter, so run each search twice and merge the results:
+  return `Execute these tool calls now. Do not ask for clarification — run all four searches immediately.
 
-Jira:
-1. jira_search with JQL: ${clause} (maxResults ${RELEVANCE_LIMIT}) — no ORDER BY, so results come back ranked by Jira's default text-relevance score.
-2. jira_search with JQL: ${clause} ORDER BY updated DESC (maxResults ${RECENCY_LIMIT}) — to also catch recently-touched matches that may rank lower on relevance.
-Merge both result sets, de-duplicating by issue key.
+Jira (run both, then merge by issue key, dedup):
+1. jira_search JQL: ${clause}  maxResults=${RELEVANCE_LIMIT}
+2. jira_search JQL: ${clause} ORDER BY updated DESC  maxResults=${RECENCY_LIMIT}
 
-Confluence:
-1. confluence_search with CQL: (${clause}) (limit ${RELEVANCE_LIMIT}) — no explicit order by, so results come back ranked by relevance.
-2. confluence_search with CQL: (${clause}) order by lastmodified desc (limit ${RECENCY_LIMIT}) — to also catch recently-edited matches.
-Merge both result sets, de-duplicating by page id.
+Confluence (run both, then merge by page id, dedup):
+1. confluence_search CQL: (${clause})  limit=${RELEVANCE_LIMIT}
+2. confluence_search CQL: (${clause}) order by lastmodified desc  limit=${RECENCY_LIMIT}
 
-Populate every field from the tool results where available; use null for any field the tools didn't return. Only report data the tools actually returned — do not invent issues or pages. If a search returns no results, use an empty array for that key.`
+After running all searches, respond with ONLY a JSON code block — no preamble, no explanation, no text outside the block:
+
+\`\`\`json
+{"jira": [...], "confluence": [...]}
+\`\`\`
+
+Use only data the tools returned. Populate fields where available, null for anything not returned. If a search has no results, use [].`
 }
 
 export async function gatherAtlassianEvidence(keywords: string[]): Promise<AtlassianEvidence> {
@@ -92,20 +59,25 @@ export async function gatherAtlassianEvidence(keywords: string[]): Promise<Atlas
       '--mcp-config', configPath,
       '--strict-mcp-config',
       '--allowedTools', ALLOWED_TOOLS,
-      '--permission-mode', 'default',
+      '--permission-mode', 'bypassPermissions',
       '--output-format', 'json',
-      '--json-schema', JSON.stringify(OUTPUT_SCHEMA),
       buildPrompt(keywords),
     ], TIMEOUT_MS)
 
-    const envelope = JSON.parse(stdout) as { structured_output?: RawAtlassianResult; is_error?: boolean; result?: string }
-    if (!envelope.structured_output) {
-      throw new Error(envelope.result ?? 'No structured output returned')
-    }
+    const envelope = JSON.parse(stdout) as { is_error?: boolean; result?: string }
+    // When is_error is true the "result" field holds Claude's error text — not useful data
+    if (envelope.is_error) throw new Error('Claude CLI reported an error')
+    if (!envelope.result) throw new Error('No result returned')
+
+    // Claude returns the JSON inside a markdown code block — extract it
+    const jsonMatch = envelope.result.match(/```(?:json)?\s*([\s\S]*?)```/) ?? envelope.result.match(/(\{[\s\S]*\})/)
+    // No JSON block means Claude returned a narrative (e.g. "no results found") — treat as empty
+    if (!jsonMatch) return { jira: { status: 'ok', items: [] }, confluence: { status: 'ok', items: [] } }
+    const parsed = JSON.parse(jsonMatch[1].trim()) as RawAtlassianResult
 
     return {
-      jira: { status: 'ok', items: envelope.structured_output.jira ?? [] },
-      confluence: { status: 'ok', items: envelope.structured_output.confluence ?? [] },
+      jira: { status: 'ok', items: parsed.jira ?? [] },
+      confluence: { status: 'ok', items: parsed.confluence ?? [] },
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error'

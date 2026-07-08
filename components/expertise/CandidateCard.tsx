@@ -7,6 +7,8 @@ const CONFIDENCE_CONFIG: Record<ExpertiseCandidate['confidence'], { label: strin
   low: { label: 'Low confidence', className: 'bg-muted text-muted-foreground border-border' },
 }
 
+const CONTACT_BTN = 'inline-flex items-center rounded px-2 py-0.5 text-[11px] font-medium text-white transition-opacity'
+
 type Props = {
   rank: number
   candidate: ExpertiseCandidate
@@ -14,14 +16,28 @@ type Props = {
 
 export function CandidateCard({ rank, candidate }: Props) {
   const confidence = CONFIDENCE_CONFIG[candidate.confidence]
+  const email = candidate.email
 
   return (
     <BriefingSection title={`#${rank} — ${candidate.name}`}>
-      <div className="flex items-center gap-2 mb-2">
+      <div className="flex flex-wrap items-center gap-2 mb-2">
         <span className={`inline-flex items-center rounded border px-2 py-0.5 text-xs font-medium ${confidence.className}`}>
           {confidence.label}
         </span>
-        {candidate.email && <span className="text-xs text-zinc-500 font-mono">{candidate.email}</span>}
+        {email && (
+          <>
+            <a href={`mailto:${email}`} className={`${CONTACT_BTN} bg-[#0078D4] hover:opacity-90`}>Email</a>
+            <a
+              href={`https://teams.microsoft.com/l/chat/0/0?users=${encodeURIComponent(email)}`}
+              target="_blank"
+              rel="noreferrer"
+              className={`${CONTACT_BTN} bg-[#6264A7] hover:opacity-90`}
+            >
+              Teams
+            </a>
+            <span className={`${CONTACT_BTN} bg-[#4A154B] opacity-30 cursor-not-allowed`}>Slack</span>
+          </>
+        )}
       </div>
       <p className="text-sm text-foreground/80 mb-3">{candidate.rationale}</p>
       {candidate.evidence.length > 0 && (
