@@ -16,20 +16,22 @@ export function recencyLabel(dateStr: string): string {
 export function renderEvidence(evidence: EvidenceBundle): string {
   const parts: string[] = []
 
-  parts.push('## Git commit history\n')
-  if (evidence.git.status === 'ok') {
-    if (evidence.git.items.length === 0) {
-      parts.push('No matching commits found.\n')
+  // Confluence first — strongest signal of current knowledge
+  parts.push('## Confluence pages\n')
+  if (evidence.confluence.status === 'ok') {
+    if (evidence.confluence.items.length === 0) {
+      parts.push('No matching pages found.\n')
     } else {
-      for (const item of evidence.git.items) {
+      for (const item of evidence.confluence.items) {
+        const modified = item.lastModified ? recencyLabel(item.lastModified) : 'unknown'
         parts.push(
-          `- ${item.authorName} <${item.authorEmail}> — ${item.commitCount} matching commit(s) in ${item.repo}; first ${recencyLabel(item.firstCommitDate)} (${item.firstCommitDate}), most recent ${recencyLabel(item.lastCommitDate)} (${item.lastCommitDate}) (matched on: ${item.matchedOn.join(', ')}). Sample subjects: ${item.sampleSubjects.map((s) => `"${s}"`).join('; ')}`,
+          `- "${item.title}" (space: ${item.spaceKey ?? 'unknown'}, last edited by: ${item.author ?? 'unknown'}, last modified ${modified}, ${item.url})`,
         )
       }
     }
-    parts.push(`(Scanned ${evidence.git.reposScanned} repo(s), skipped ${evidence.git.reposSkipped}.)\n`)
+    parts.push('')
   } else {
-    parts.push(`Unavailable (${evidence.git.error ?? evidence.git.status}).\n`)
+    parts.push(`Unavailable (${evidence.confluence.error ?? evidence.confluence.status}).\n`)
   }
 
   parts.push('## Jira issues\n')
@@ -48,21 +50,21 @@ export function renderEvidence(evidence: EvidenceBundle): string {
     parts.push(`Unavailable (${evidence.jira.error ?? evidence.jira.status}).\n`)
   }
 
-  parts.push('## Confluence pages\n')
-  if (evidence.confluence.status === 'ok') {
-    if (evidence.confluence.items.length === 0) {
-      parts.push('No matching pages found.\n')
+  // Git last — useful for maker signal and historical depth, but secondary to docs
+  parts.push('## Git commit history\n')
+  if (evidence.git.status === 'ok') {
+    if (evidence.git.items.length === 0) {
+      parts.push('No matching commits found.\n')
     } else {
-      for (const item of evidence.confluence.items) {
-        const modified = item.lastModified ? recencyLabel(item.lastModified) : 'unknown'
+      for (const item of evidence.git.items) {
         parts.push(
-          `- "${item.title}" (space: ${item.spaceKey ?? 'unknown'}, last edited by: ${item.author ?? 'unknown'}, last modified ${modified}, ${item.url})`,
+          `- ${item.authorName} <${item.authorEmail}> — ${item.commitCount} matching commit(s) in ${item.repo}; first ${recencyLabel(item.firstCommitDate)} (${item.firstCommitDate}), most recent ${recencyLabel(item.lastCommitDate)} (${item.lastCommitDate}) (matched on: ${item.matchedOn.join(', ')}). Sample subjects: ${item.sampleSubjects.map((s) => `"${s}"`).join('; ')}`,
         )
       }
     }
-    parts.push('')
+    parts.push(`(Scanned ${evidence.git.reposScanned} repo(s), skipped ${evidence.git.reposSkipped}.)\n`)
   } else {
-    parts.push(`Unavailable (${evidence.confluence.error ?? evidence.confluence.status}).\n`)
+    parts.push(`Unavailable (${evidence.git.error ?? evidence.git.status}).\n`)
   }
 
   return parts.join('\n')
