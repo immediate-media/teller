@@ -1,7 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { MOCK_BRIEFING, MOCK_EXPERTISE, mockDelay } from '@/lib/mock/fixtures'
 
-const MODEL = process.env.CLAUDE_MODEL ?? 'claude-sonnet-4-6'
+const MODEL = process.env.CLAUDE_MODEL ?? 'claude-haiku-4-5'
 const MAX_TOKENS = 8192
 
 let _client: Anthropic | null = null
