@@ -21,13 +21,12 @@ type ConfluenceSearchResponse = {
 }
 
 function buildConfluenceBase(): string {
-  const url = (process.env.CONFLUENCE_URL ?? '').replace(/\/$/, '')
-  // Normalise: ensure base does not include /wiki (we append it for API calls)
+  const url = (process.env.ATLASSIAN_URL ?? '').replace(/\/$/, '')
   return url.replace(/\/wiki$/, '')
 }
 
 function buildAuthHeader(): string {
-  const credentials = `${process.env.CONFLUENCE_USERNAME}:${process.env.CONFLUENCE_API_TOKEN}`
+  const credentials = `${process.env.ATLASSIAN_EMAIL}:${process.env.ATLASSIAN_API_TOKEN}`
   return `Basic ${Buffer.from(credentials).toString('base64')}`
 }
 
@@ -62,7 +61,7 @@ export async function gatherConfluenceEvidence(keywords: string[]): Promise<Evid
     return { status: 'ok', items: MOCK_CONFLUENCE_ITEMS }
   }
 
-  if (!process.env.CONFLUENCE_URL || !process.env.CONFLUENCE_USERNAME || !process.env.CONFLUENCE_API_TOKEN) {
+  if (!process.env.ATLASSIAN_URL || !process.env.ATLASSIAN_EMAIL || !process.env.ATLASSIAN_API_TOKEN) {
     return { status: 'skipped', items: [], error: 'Confluence credentials not configured' }
   }
 

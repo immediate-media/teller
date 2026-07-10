@@ -1,16 +1,25 @@
 export function buildAtlassianMcpConfig(): object | null {
-  const { JIRA_URL, JIRA_USERNAME, JIRA_API_TOKEN, CONFLUENCE_URL, CONFLUENCE_USERNAME, CONFLUENCE_API_TOKEN } = process.env
+  const { ATLASSIAN_URL, ATLASSIAN_EMAIL, ATLASSIAN_API_TOKEN } = process.env
 
-  if (!JIRA_URL || !JIRA_USERNAME || !JIRA_API_TOKEN || !CONFLUENCE_URL || !CONFLUENCE_USERNAME || !CONFLUENCE_API_TOKEN) {
+  if (!ATLASSIAN_URL || !ATLASSIAN_EMAIL || !ATLASSIAN_API_TOKEN) {
     return null
   }
+
+  const baseUrl = ATLASSIAN_URL.replace(/\/$/, '')
 
   return {
     mcpServers: {
       'mcp-atlassian': {
         command: 'uvx',
         args: ['mcp-atlassian'],
-        env: { JIRA_URL, JIRA_USERNAME, JIRA_API_TOKEN, CONFLUENCE_URL, CONFLUENCE_USERNAME, CONFLUENCE_API_TOKEN },
+        env: {
+          JIRA_URL: baseUrl,
+          JIRA_USERNAME: ATLASSIAN_EMAIL,
+          JIRA_API_TOKEN: ATLASSIAN_API_TOKEN,
+          CONFLUENCE_URL: baseUrl,
+          CONFLUENCE_USERNAME: ATLASSIAN_EMAIL,
+          CONFLUENCE_API_TOKEN: ATLASSIAN_API_TOKEN,
+        },
       },
     },
   }

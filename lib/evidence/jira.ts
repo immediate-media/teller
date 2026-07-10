@@ -21,12 +21,12 @@ type JiraSearchResponse = {
 }
 
 function buildJiraUrl(): string {
-  const url = process.env.JIRA_URL ?? ''
+  const url = process.env.ATLASSIAN_URL ?? ''
   return url.replace(/\/$/, '')
 }
 
 function buildAuthHeader(): string {
-  const credentials = `${process.env.JIRA_USERNAME}:${process.env.JIRA_API_TOKEN}`
+  const credentials = `${process.env.ATLASSIAN_EMAIL}:${process.env.ATLASSIAN_API_TOKEN}`
   return `Basic ${Buffer.from(credentials).toString('base64')}`
 }
 
@@ -61,7 +61,7 @@ export async function gatherJiraEvidence(keywords: string[]): Promise<EvidenceBu
     return { status: 'ok', items: MOCK_JIRA_ITEMS }
   }
 
-  if (!process.env.JIRA_URL || !process.env.JIRA_USERNAME || !process.env.JIRA_API_TOKEN) {
+  if (!process.env.ATLASSIAN_URL || !process.env.ATLASSIAN_EMAIL || !process.env.ATLASSIAN_API_TOKEN) {
     return { status: 'skipped', items: [], error: 'Jira credentials not configured' }
   }
 

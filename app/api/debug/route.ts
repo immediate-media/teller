@@ -9,12 +9,9 @@ const ENV_VARS = [
   'ANTHROPIC_API_KEY',
   'CLAUDE_MODEL',
   'CLAUDE_BIN',
-  'JIRA_URL',
-  'JIRA_USERNAME',
-  'JIRA_API_TOKEN',
-  'CONFLUENCE_URL',
-  'CONFLUENCE_USERNAME',
-  'CONFLUENCE_API_TOKEN',
+  'ATLASSIAN_URL',
+  'ATLASSIAN_EMAIL',
+  'ATLASSIAN_API_TOKEN',
 ]
 
 async function checkBin(bin: string, args: string[]): Promise<{ available: boolean; output?: string; error?: string }> {
