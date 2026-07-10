@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk'
+import { MOCK_BRIEFING, MOCK_EXPERTISE, mockDelay } from '@/lib/mock/fixtures'
 
 const MODEL = process.env.CLAUDE_MODEL ?? 'claude-sonnet-4-6'
 const MAX_TOKENS = 8192
@@ -16,6 +17,13 @@ function getClient(): Anthropic {
 }
 
 export async function runClaude(systemPrompt: string, userPrompt: string): Promise<string> {
+  if (process.env.TELLER_MOCK === 'true') {
+    await mockDelay(2000)
+    // Return briefing fixture when the system prompt mentions PM briefing, expertise otherwise
+    const fixture = systemPrompt.includes('PM briefing') ? MOCK_BRIEFING : MOCK_EXPERTISE
+    return JSON.stringify(fixture)
+  }
+
   const message = await getClient().messages.create({
     model: MODEL,
     max_tokens: MAX_TOKENS,
