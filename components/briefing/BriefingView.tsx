@@ -1,4 +1,4 @@
-import type { BriefingMeta, BriefingOutput } from '@/types'
+import type { BriefingMeta, BriefingOutput, ResultRating } from '@/types'
 import { BriefingSection } from './BriefingSection'
 import { StatusBadge } from './StatusBadge'
 import { RiskRow } from './RiskRow'
@@ -8,9 +8,10 @@ type Props = {
   id: string
   briefing: BriefingOutput
   meta: BriefingMeta
+  initialRating?: ResultRating
 }
 
-export function BriefingView({ id, briefing, meta }: Props) {
+export function BriefingView({ id, briefing, meta, initialRating }: Props) {
   const { projectName, oneLiner, sections } = briefing
   const hasContributors = meta.owner || meta.recentContributors.length > 0
 
@@ -21,7 +22,7 @@ export function BriefingView({ id, briefing, meta }: Props) {
           <h1 className="text-2xl font-display font-bold tracking-tight">{projectName}</h1>
           <p className="mt-1 text-sm text-muted-foreground">{oneLiner}</p>
         </div>
-        <RatingButtons resultId={id} />
+        <RatingButtons resultId={id} initialRating={initialRating} />
       </div>
 
       {hasContributors && (

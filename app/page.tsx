@@ -11,11 +11,11 @@ import { ExpertiseView } from '@/components/expertise/ExpertiseView'
 import { HistoryView } from '@/components/HistoryView'
 import { ThinkingBubbles } from '@/components/ThinkingBubbles'
 import { cn } from '@/lib/utils'
-import type { BriefingMeta, BriefingOutput, ExpertiseResponse, StoredResult } from '@/types'
+import type { BriefingMeta, BriefingOutput, ExpertiseResponse, ResultRating, StoredResult } from '@/types'
 
 type AskSubMode = 'briefing' | 'expertise'
-type ExpertiseSuccess = Extract<ExpertiseResponse, { ok: true }>
-type BriefingResult = { id: string; briefing: BriefingOutput; meta: BriefingMeta }
+type ExpertiseSuccess = Extract<ExpertiseResponse, { ok: true }> & { initialRating?: ResultRating }
+type BriefingResult = { id: string; briefing: BriefingOutput; meta: BriefingMeta; initialRating?: ResultRating }
 
 export default function Home() {
   const [sideMode, setSideMode] = useState<SideMode>('ask')
@@ -34,9 +34,9 @@ export default function Home() {
     if (!res.ok) return
     const stored: StoredResult = await res.json()
     if (stored.type === 'briefing') {
-      setBriefingResult({ id: stored.id, briefing: stored.briefing, meta: stored.meta })
+      setBriefingResult({ id: stored.id, briefing: stored.briefing, meta: stored.meta, initialRating: stored.rating })
     } else {
-      setExpertise({ ok: true, id: stored.id, result: stored.result, evidence: stored.evidence })
+      setExpertise({ ok: true, id: stored.id, result: stored.result, evidence: stored.evidence, initialRating: stored.rating })
     }
     setSideMode('ask')
   }
@@ -65,6 +65,7 @@ export default function Home() {
               id={briefingResult.id}
               briefing={briefingResult.briefing}
               meta={briefingResult.meta}
+              initialRating={briefingResult.initialRating}
             />
           </motion.div>
         )}
@@ -87,6 +88,7 @@ export default function Home() {
               id={expertise.id}
               result={expertise.result}
               evidence={expertise.evidence}
+              initialRating={expertise.initialRating}
             />
           </motion.div>
         )}

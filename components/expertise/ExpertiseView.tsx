@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import type { EvidenceBundle, ExpertiseOutput } from '@/types'
+import type { EvidenceBundle, ExpertiseOutput, ResultRating } from '@/types'
 import { BriefingSection } from '@/components/briefing/BriefingSection'
 import { CandidateCard } from './CandidateCard'
 import { FollowUp } from './FollowUp'
@@ -14,9 +14,10 @@ type Props = {
   id: string
   result: ExpertiseOutput
   evidence: EvidenceBundle
+  initialRating?: ResultRating
 }
 
-export function ExpertiseView({ id, result, evidence }: Props) {
+export function ExpertiseView({ id, result, evidence, initialRating }: Props) {
   const [tab, setTab] = useState<Tab>('maintainers')
   const hasAnyCandidates = result.makers.length > 0 || result.maintainers.length > 0
   const confluenceSkipped = evidence.confluence.status === 'skipped' || evidence.confluence.status === 'error'
@@ -70,7 +71,7 @@ export function ExpertiseView({ id, result, evidence }: Props) {
             </ul>
           )}
         </div>
-        <RatingButtons resultId={id} />
+        <RatingButtons resultId={id} initialRating={initialRating} />
       </div>
 
       {confluenceSkipped && (
