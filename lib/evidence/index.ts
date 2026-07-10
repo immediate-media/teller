@@ -16,7 +16,7 @@ export async function gatherEvidence(
   // Await git first (25s deadline — finishes before Atlassian in most cases)
   // then signal the Atlassian step while it's still running
   const git = await gitPromise
-  onProgress?.('Searching Jira and Confluence…')
+  onProgress?.('Searching Jira and Confluence in parallel…')
   const atlassian = await atlassianPromise
 
   return { keywords, git, jira: atlassian.jira, confluence: atlassian.confluence }

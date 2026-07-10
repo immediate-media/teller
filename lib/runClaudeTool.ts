@@ -9,10 +9,14 @@ const MODEL = 'claude-sonnet-4-6'
 // never arrive and eventually gets killed by the timeout instead of failing fast.
 export function runClaudeTool(args: string[], timeoutMs: number): Promise<string> {
   if (process.env.TELLER_MOCK === 'true') {
+    const isJira = args.some((a) => a.includes('jira_search') && !a.includes('confluence'))
+    const payload = isJira
+      ? { jira: MOCK_JIRA_ITEMS }
+      : { confluence: MOCK_CONFLUENCE_ITEMS }
     return mockDelay(1500).then(() =>
       JSON.stringify({
         is_error: false,
-        result: `\`\`\`json\n${JSON.stringify({ jira: MOCK_JIRA_ITEMS, confluence: MOCK_CONFLUENCE_ITEMS })}\n\`\`\``,
+        result: `\`\`\`json\n${JSON.stringify(payload)}\n\`\`\``,
       }),
     )
   }
